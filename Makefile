@@ -4,16 +4,13 @@ PREFIX = /usr/local
 SYSCONFDIR = /etc
 
 SYSCONF = \
-	data/garuda-tools.conf \
+	data/arch-tools.conf \
 	data/branding.desc.d
-APP_BASE = \
-	applications/garuda-chroot-gui.desktop \
 
 BIN_BASE = \
 	bin/mkchroot \
 	bin/basestrap \
-	bin/garuda-chroot \
-	bin/garuda-chroot-gui \
+	bin/arch-chroot \
 	bin/fstabgen \
 	bin/signfile \
 	bin/chroot-run

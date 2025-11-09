@@ -87,7 +87,7 @@ MAN_XML = \
 	buildiso.xml \
 	deployiso.xml \
 	check-yaml.xml \
-	garuda-tools.conf.xml \
+	arch-tools.conf.xml \
 	profile.conf.xml
 
 BIN_YAML = \
@@ -183,7 +183,7 @@ install_iso:
 	gzip -c man/deployiso.1 > $(DESTDIR)$(PREFIX)/share/man/man1/deployiso.1.gz
 
 	install -dm0755 $(DESTDIR)$(PREFIX)/share/man/man5
-	gzip -c man/garuda-tools.conf.5 > $(DESTDIR)$(PREFIX)/share/man/man5/arch-tools.conf.5.gz
+	gzip -c man/arch-tools.conf.5 > $(DESTDIR)$(PREFIX)/share/man/man5/arch-tools.conf.5.gz
 	gzip -c man/profile.conf.5 > $(DESTDIR)$(PREFIX)/share/man/man5/profile.conf.5.gz
 
 install_yaml:
@@ -240,7 +240,7 @@ install: install_base install_pkg install_iso install_yaml
 uninstall: uninstall_base uninstall_pkg uninstall_iso uninstall_yaml
 
 dist:
-	git archive --format=tar --prefix=garuda-tools-$(Version)/ $(Version) | gzip -9 > arch-tools-$(Version).tar.gz
+	git archive --format=tar --prefix=arch-tools-$(Version)/ $(Version) | gzip -9 > arch-tools-$(Version).tar.gz
 	gpg --detach-sign --use-agent arch-tools-$(Version).tar.gz
 
 .PHONY: all clean install uninstall dist

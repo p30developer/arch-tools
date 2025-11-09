@@ -172,7 +172,7 @@ assemble_iso(){
         -volid "${iso_label}" \
         -appid "${iso_app_id}" \
         -publisher "${iso_publisher}" \
-        -preparer "Prepared by garuda-tools/${0##*/}" \
+        -preparer "Prepared by arch-tools/${0##*/}" \
         -r -graft-points -no-pad \
         --sort-weight 0 / \
         --sort-weight 1 /boot \
@@ -225,8 +225,8 @@ make_iso() {
     ${zsync} && make_zsync
     ${checksum} && checksumiso "${iso_dir}"
 
-    if [ -e "/var/cache/garuda-tools/garuda-builds/.env" ]; then
-        source /var/cache/garuda-tools/garuda-builds/.env
+    if [ -e "/var/cache/arch-tools/arch-builds/.env" ]; then
+        source /var/cache/arch-tools/arch-builds/.env
     fi
     if [ ! -z "$TELEGRAM" ]; then
         echo "${iso_file} built successfully!" | apprise -vv "${TELEGRAM}" -t "New ISO build available!"
@@ -239,7 +239,7 @@ make_torrent(){
     find ${iso_dir} -type f -name "*.torrent" -delete
     if [[ -f "${iso_dir}/${iso_file}" ]]; then
         mirror_path="${edition}/${profile}/${dist_timestamp}/${iso_file}"
-        local seed="https://downloads.sourceforge.net/project/garuda-linux/${mirror_path}"
+        local seed="https://downloads.sourceforge.net/project/arch-linux/${mirror_path}"
         local tracker_url1=udp://tracker.opentrackr.org:1337/announce
         local tracker_url2=udp://tracker.openbittorrent.com:80/announce
         local tracker_url3=http://fosstorrents.com:6969/announce
@@ -264,11 +264,11 @@ make_zsync(){
 }
 
 gen_permalink(){
-    if [[ ${edition} == "community" ]] || [[ ${edition} == "garuda" ]]; then
+    if [[ ${edition} == "community" ]] || [[ ${edition} == "arch" ]]; then
         if [[ -f "${iso_dir}/${iso_file}" ]]; then
             msg2 "Creating download link ..."
-            direct_url="https://sourceforge.net/projects/garuda-linux/files/${iso_file}"
-            [[ ${edition} == "community" ]] && direct_url="https://sourceforge.net/projects/garuda-linux/files/${iso_file}"
+            direct_url="https://sourceforge.net/projects/arch-linux/files/${iso_file}"
+            [[ ${edition} == "community" ]] && direct_url="https://sourceforge.net/projects/arch-linux/files/${iso_file}"
             ## html permalink
             html_doc="<!DOCTYPE HTML>"
             html_doc+="<meta charset=\"UTF-8\">"
@@ -363,7 +363,7 @@ make_image_root() {
 
         chroot_create "${path}" "${packages}" || die
 
-        echo -e "TIMESTAMP=${dist_timestamp}\nCODENAME=${dist_codename}" >> "${path}/usr/lib/garuda/garuda-release"
+        echo -e "TIMESTAMP=${dist_timestamp}\nCODENAME=${dist_codename}" >> "${path}/usr/lib/arch/arch-release"
 
         # /build/grub needs to exist if grub is in use, otherwise grub-mkconfig will fail on calamares in BIOS mode
         if [[ "${efi_boot_loader}" == "grub" ]]; then
@@ -394,7 +394,7 @@ make_image_desktop() {
         [[ -e ${profile_dir}/desktop-overlay-common ]] && copy_overlay "${profile_dir}/desktop-overlay-common" "${path}"
         [[ -e ${profile_dir}/desktop-overlay ]] && copy_overlay "${profile_dir}/desktop-overlay" "${path}"
 
-        if [[ -e "${path}/usr/share/calamares/branding/garuda/branding.desc" ]]; then
+        if [[ -e "${path}/usr/share/calamares/branding/arch/branding.desc" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi
@@ -435,7 +435,7 @@ make_image_live() {
         [[ -e ${profile_dir}/live-overlay ]] && copy_overlay "${profile_dir}/live-overlay" "${path}"
         configure_live_image "${path}"
 
-        if [[ -e "${path}/usr/share/calamares/branding/garuda/branding.desc" ]]; then
+        if [[ -e "${path}/usr/share/calamares/branding/arch/branding.desc" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi

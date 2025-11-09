@@ -213,15 +213,15 @@ init_common(){
 
     [[ -z ${target_arch} ]] && target_arch=$(uname -m)
 
-    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/garuda-tools/garuda-builds'
+    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/arch-tools/arch-builds'
 
-    [[ -z ${chroots_dir} ]] && chroots_dir='/var/cache/garuda-tools/garuda-chroots'
+    [[ -z ${chroots_dir} ]] && chroots_dir='/var/cache/arch-tools/arch-chroots'
 
-    [[ -z ${log_dir} ]] && log_dir='/var/cache/garuda-tools/garuda-logs'
+    [[ -z ${log_dir} ]] && log_dir='/var/cache/arch-tools/arch-logs'
 
     [[ -z ${build_mirror} ]] && build_mirror='http://mirrors.kernel.org'
 
-    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/garuda-tools'
+    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/arch-tools'
 }
 
 init_buildtree(){
@@ -231,6 +231,7 @@ init_buildtree(){
 
     [[ -z ${repo_tree[@]} ]] && repo_tree=('core' 'extra' 'community' 'multilib')
 
+#?????
     [[ -z ${host_tree} ]] && host_tree='https://gitlab.com/garuda-linux'
 
     [[ -z ${host_tree_abs} ]] && host_tree_abs='https://projects.archlinux.org/git/svntogit'
@@ -319,7 +320,7 @@ init_buildiso(){
 
     iso_name=$(get_osid)
 
-    [[ -z ${dist_branding} ]] && dist_branding="garuda"
+    [[ -z ${dist_branding} ]] && dist_branding="arch"
 
     [[ -z ${iso_compression} ]] && iso_compression='xz'
 
@@ -382,9 +383,9 @@ load_config(){
 
     [[ -f $1 ]] || return 1
 
-    garuda_tools_conf="$1"
+    arch_tools_conf="$1"
 
-    [[ -r ${garuda_tools_conf} ]] && source ${garuda_tools_conf}
+    [[ -r ${arch_tools_conf} ]] && source ${arch_tools_conf}
 
     init_common
 
@@ -424,15 +425,15 @@ load_profile_config(){
 
     [[ -z ${efi_boot_loader} ]] && efi_boot_loader="grub"
 
-    [[ -z ${hostname} ]] && hostname="garuda"
+    [[ -z ${hostname} ]] && hostname="arch"
 
-    [[ -z ${username} ]] && username="garuda"
+    [[ -z ${username} ]] && username="arch"
 
     [[ -z ${use_dracut} ]] && use_dracut="true"
 
-    [[ -z ${plymouth_theme} ]] && plymouth_theme="garuda"
+    [[ -z ${plymouth_theme} ]] && plymouth_theme="arch"
 
-    [[ -z ${password} ]] && password="garuda"
+    [[ -z ${password} ]] && password="arch"
 
     [[ -z ${user_shell} ]] && user_shell='/bin/zsh'
 
@@ -449,7 +450,7 @@ load_profile_config(){
     [[ -z ${disable_systemd[@]} ]] && disable_systemd=('pacman-init')
 
     if [[ -z ${enable_systemd_live[@]} ]]; then
-        enable_systemd_live=('garuda-live' 'ght-live' 'pacman-init' 'mirrors-live')
+        enable_systemd_live=('arch-live' 'ght-live' 'pacman-init' 'mirrors-live')
     fi
 
     if [[ ${displaymanager} != "none" ]]; then
@@ -468,6 +469,7 @@ load_profile_config(){
 
     [[ -z ${chrootcfg} ]] && chrootcfg='false'
 
+#??????
     netgroups="https://gitlab.com/garuda-linux/packages/pkgbuilds/garuda-pkgbuilds/-/raw/master/pkgbuilds/calamares-netinstall-settings/netinstall-software.yaml"
 
     [[ -z ${geoip} ]] && geoip='true'
@@ -492,11 +494,11 @@ get_edition(){
 
 get_project(){
     case "${edition}" in
-        'garuda')
-            project="garuda"
+        'arch')
+            project="arch"
         ;;
-        'garuda-wm')
-            project="garuda-wm"
+        'arch-wm')
+            project="arch-wm"
         ;;
     esac
     echo "${project}"
@@ -641,10 +643,10 @@ load_pkgs(){
     case "${edition}" in
         'sonar')
             _edition="s|>sonar||g"
-            _edition_rm="s|>garuda.*||g"
+            _edition_rm="s|>arch.*||g"
         ;;
         *)
-            _edition="s|>garuda||g"
+            _edition="s|>arch||g"
             _edition_rm="s|>sonar.*||g"
         ;;
     esac
@@ -712,7 +714,7 @@ clean_dir(){
 write_repo_conf(){
     local repos=$(find $USER_HOME -type f -name "repo_info")
     local path name
-    _workdir='/var/cache/garuda-tools'
+    _workdir='/var/cache/arch-tools'
     [[ -z ${repos[@]} ]] && run_dir=${_workdir}/iso-profiles && return 1
     for r in ${repos[@]}; do
         path=${r%/repo_info}
@@ -730,7 +732,7 @@ load_user_info(){
         USER_HOME=$HOME
     fi
 
-    USERCONFDIR="$USER_HOME/.config/garuda-tools"
+    USERCONFDIR="$USER_HOME/.config/arch-tools"
     prepare_dir "${USERCONFDIR}"
 }
 
@@ -741,15 +743,15 @@ load_run_dir(){
 }
 
 show_version(){
-    msg "garuda-tools"
+    msg "arch-tools"
     msg2 "version: %s" "${version}"
 }
 
 show_config(){
-    if [[ -f ${USERCONFDIR}/garuda-tools.conf ]]; then
-        msg2 "config: %s" "~/.config/garuda-tools/garuda-tools.conf"
+    if [[ -f ${USERCONFDIR}/arch-tools.conf ]]; then
+        msg2 "config: %s" "~/.config/arch-tools/arch-tools.conf"
     else
-        msg2 "config: %s" "${garuda_tools_conf}"
+        msg2 "config: %s" "${arch_tools_conf}"
     fi
 }
 
@@ -847,14 +849,14 @@ create_chksums() {
 }
 
 init_profiles() {
-	_workdir='/var/cache/garuda-tools'
+	_workdir='/var/cache/arch-tools'
 	if [[ -d ${_workdir}/iso-profiles ]]; then
 		rm -Rf ${_workdir}/iso-profiles
 	fi
-	git clone -q --depth 1 -b ${branch} https://gitlab.com/garuda-linux/tools/iso-profiles.git ${_workdir}/iso-profiles/
+	git clone -q --depth 1 -b ${branch} https://github.com/p30developer/iso-profiles.git ${_workdir}/iso-profiles/
 
 	#Check if git clone is done
-	if [[ -d ${_workdir}/iso-profiles/garuda ]] || [[ -d ${_workdir}/iso-profiles/community ]]; then
+	if [[ -d ${_workdir}/iso-profiles/arch ]] || [[ -d ${_workdir}/iso-profiles/community ]]; then
 
 		for i in ${_workdir}/iso-profiles/.gitignore ${_workdir}/iso-profiles/README.md; do
 		rm -f $i
@@ -863,7 +865,7 @@ init_profiles() {
 		for i in ${_workdir}/iso-profiles/.git ${_workdir}/iso-profiles/sonar; do
 			rm -Rf $i
 		done
-	else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://gitlab.com/garuda-linux/tools/iso-profiles'"
+	else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://github.com/p30developer/iso-profiles'"
 	exit 1
 	fi
 }

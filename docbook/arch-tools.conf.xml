@@ -3,16 +3,16 @@
 "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
 <!--
-This file is part of garuda-tools.
+This file is part of arch-tools.
 
-Copyright 2015 garuda Developers
+Copyright 2015 arch Developers
 
-garuda-tools is free software; you can redistribute it and/or modify it
+arch-tools is free software; you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version.
 
-garuda-tools is distributed in the hope that it will be useful, but
+arch-tools is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
@@ -25,7 +25,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
     <refentryinfo>
         <title>profile.conf-+</title>
-        <productname>garuda-tools</productname>
+        <productname>arch-tools</productname>
 
         <authorgroup>
         <author>
@@ -38,23 +38,23 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     </refentryinfo>
 
     <refmeta>
-        <refentrytitle>garuda-tools.conf</refentrytitle>
+        <refentrytitle>arch-tools.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>garuda-tools.conf</refname>
-        <refpurpose>general configuration file for garuda-tools</refpurpose>
+        <refname>arch-tools.conf</refname>
+        <refpurpose>general configuration file for arch-tools</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
-        <para><filename>garuda-tools.conf</filename></para>
+        <para><filename>arch-tools.conf</filename></para>
     </refsynopsisdiv>
 
     <refsect1>
         <title>Description</title>
 
-        <para>garuda-tools.conf is a general configuration file for all garuda-tools binaries. </para>
+        <para>arch-tools.conf is a general configuration file for all arch-tools binaries. </para>
 
         <para>By default all the options in the file are commented, with a value equal to the
         default value. To change it just uncomment and put the desired value.</para>
@@ -91,7 +91,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>cache_dir=</varname></term>
 
                 <listitem><para>Cache dir where buildpkg and buildise will cache
-                packages. Default is "/var/cache/garuda-tools".
+                packages. Default is "/var/cache/arch-tools".
                 </para></listitem>
             </varlistentry>
 
@@ -100,14 +100,14 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>chroots_dir=</varname></term>
 
                 <listitem><para>Build dir where buildpkg or buildiso chroot
-                environment will be created. Default is "/var/lib/garuda-tools".
+                environment will be created. Default is "/var/lib/arch-tools".
                 </para></listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><varname>log_dir=</varname></term>
 
-                <listitem><para>Log dir where buildiso log the build process. Default is  "/var/log/garuda-tools".
+                <listitem><para>Log dir where buildiso log the build process. Default is  "/var/log/arch-tools".
                 </para></listitem>
             </varlistentry>
 
@@ -131,7 +131,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <varlistentry>
                 <term><varname>repo_tree=</varname></term>
 
-                <listitem><para>garuda package tree. Default is
+                <listitem><para>arch package tree. Default is
                 "('core' 'extra' 'community' 'multilib')".
                 </para></listitem>
             </varlistentry>
@@ -139,7 +139,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <varlistentry>
                 <term><varname>host_tree=</varname></term>
 
-                <listitem><para>Host tree. Default is "https://github.com/garuda".
+                <listitem><para>Host tree. Default is "https://github.com/arch".
                 </para></listitem>
             </varlistentry>
 
@@ -212,7 +212,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <term><varname>kernel=</varname></term>
 
             <listitem><para>Takes a string corresponding to a
-            garuda kernel package (ex: linux318 for linux 3.18).
+            arch kernel package (ex: linux318 for linux 3.18).
             </para></listitem>
         </varlistentry>
 
@@ -253,7 +253,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>project=</varname></term>
 
                 <listitem><para>Default OSDN project name to be used for upload.
-                    If unset, 'garuda' or 'garuda-community' will be determined
+                    If unset, 'arch' or 'arch-community' will be determined
                     automatically based on profile.
                 </para></listitem>
             </varlistentry>
@@ -286,11 +286,11 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     <refsect1>
         <title>See Also</title>
         <para>
-            <citerefentry project='garuda-tools'><refentrytitle>profiles.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
-            <citerefentry project='garuda-tools'><refentrytitle>buildiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='garuda-tools'><refentrytitle>deployiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='garuda-tools'><refentrytitle>buildtree</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='garuda-tools'><refentrytitle>buildpkg</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+            <citerefentry project='arch-tools'><refentrytitle>profiles.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+            <citerefentry project='arch-tools'><refentrytitle>buildiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='arch-tools'><refentrytitle>deployiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='arch-tools'><refentrytitle>buildtree</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='arch-tools'><refentrytitle>buildpkg</refentrytitle><manvolnum>1</manvolnum></citerefentry>
         </para>
     </refsect1>
 

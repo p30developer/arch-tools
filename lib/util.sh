@@ -231,8 +231,8 @@ init_buildtree(){
 
     [[ -z ${repo_tree[@]} ]] && repo_tree=('core' 'extra' 'community' 'multilib')
 
-#?????
-    [[ -z ${host_tree} ]] && host_tree='https://gitlab.com/garuda-linux'
+
+    [[ -z ${host_tree} ]] && host_tree='https://gitlab.archlinux.org/archlinux'
 
     [[ -z ${host_tree_abs} ]] && host_tree_abs='https://projects.archlinux.org/git/svntogit'
 }
@@ -469,8 +469,8 @@ load_profile_config(){
 
     [[ -z ${chrootcfg} ]] && chrootcfg='false'
 
-#??????
-    netgroups="https://gitlab.com/garuda-linux/packages/pkgbuilds/garuda-pkgbuilds/-/raw/master/pkgbuilds/calamares-netinstall-settings/netinstall-software.yaml"
+#?????? with calamres must replace
+    netgroups="https://gitlab.archlinux.org/archlinux/packages/pkgbuilds/garuda-pkgbuilds/-/raw/master/pkgbuilds/calamares-netinstall-settings/netinstall-software.yaml"
 
     [[ -z ${geoip} ]] && geoip='true'
 

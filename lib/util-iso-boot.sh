@@ -11,40 +11,28 @@
 
 prepare_initcpio(){
     msg2 "Copying initcpio ..."
-    if ${use_dracut}; then
-        install -Dm755 "${DATADIR}"/miso.sh $1/usr/lib/dracut/modules.d/95miso/miso.sh
-        install -Dm755 "${DATADIR}"/parse-miso.sh $1/usr/lib/dracut/modules.d/95miso/parse-miso.sh
-        install -Dm755 "${DATADIR}"/miso-generator.sh $1/usr/lib/dracut/modules.d/95miso/miso-generator.sh
-        install -Dm755 "${DATADIR}"/module-setup.sh $1/usr/lib/dracut/modules.d/95miso/module-setup.sh
-    else
-        cp /etc/initcpio/hooks/miso* $1/etc/initcpio/hooks
-        cp /etc/initcpio/install/miso* $1/etc/initcpio/install
-        cp /etc/initcpio/miso_shutdown $1/etc/initcpio
-    fi
+    cp /etc/initcpio/hooks/miso* $1/etc/initcpio/hooks
+    cp /etc/initcpio/install/miso* $1/etc/initcpio/install
+    cp /etc/initcpio/miso_shutdown $1/etc/initcpio
 }
 
 prepare_initramfs(){
-    local _kernver=$(ls $1/usr/lib/modules/ | awk '{print $1}')
-    if ${use_dracut}; then
-        chroot-run $1 \
-            /usr/bin/dracut /boot/initramfs.img ${_kernver} --force -o "network" -a miso --no-hostonly
-    else
-        cp ${DATADIR}/mkinitcpio.conf $1/etc/mkinitcpio-${iso_name}.conf
-        if [[ -n ${gpgkey} ]]; then
-            su ${OWNER} -c "gpg --export ${gpgkey} >${USERCONFDIR}/gpgkey"
-            exec 17<>${USERCONFDIR}/gpgkey
-        fi
-        MISO_GNUPG_FD=${gpgkey:+17} chroot-run $1 \
-            /usr/bin/mkinitcpio -k ${_kernver} \
-            -c /etc/mkinitcpio-${iso_name}.conf \
-            -g /boot/initramfs.img
+    cp ${DATADIR}/mkinitcpio.conf $1/etc/mkinitcpio-${iso_name}.conf
+    local _kernver=$(ls $1/lib/modules)
+    if [[ -n ${gpgkey} ]]; then
+        su ${OWNER} -c "gpg --export ${gpgkey} >${USERCONFDIR}/gpgkey"
+        exec 17<>${USERCONFDIR}/gpgkey
+    fi
+    MISO_GNUPG_FD=${gpgkey:+17} chroot-run $1 \
+        /usr/bin/mkinitcpio -k ${_kernver} \
+        -c /etc/mkinitcpio-${iso_name}.conf \
+        -g /boot/initramfs.img
 
-        if [[ -n ${gpgkey} ]]; then
-            exec 17<&-
-        fi
-        if [[ -f ${USERCONFDIR}/gpgkey ]]; then
-            rm ${USERCONFDIR}/gpgkey
-        fi
+    if [[ -n ${gpgkey} ]]; then
+        exec 17<&-
+    fi
+    if [[ -f ${USERCONFDIR}/gpgkey ]]; then
+        rm ${USERCONFDIR}/gpgkey
     fi
 }
 
@@ -54,7 +42,6 @@ prepare_boot_extras(){
     cp $1/usr/share/licenses/amd-ucode/LIC* $2/amd_ucode.LICENSE
     cp $1/usr/share/licenses/intel-ucode/LIC* $2/intel_ucode.LICENSE
     cp $1/boot/memtest86+/memtest.bin $2/memtest
-    cp $1/usr/share/licenses/spdx/GPL-2.0-only.txt $2/memtest.COPYING
 }
 
 prepare_grub(){

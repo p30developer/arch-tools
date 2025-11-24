@@ -25,13 +25,11 @@ show_profile(){
     if ${verbose}; then
         msg2 "autologin: %s" "${autologin}"
         msg2 "nonfree_mhwd: %s" "${nonfree_mhwd}"
-        msg2 "plymouth_boot: %s" "${plymouth_boot}"
-        ${plymouth_boot} && msg2 "plymouth_theme: %s" "${plymouth_theme}"
-
 
         [[ ${target_arch} == 'x86_64' ]] && msg2 "multilib: %s" "${multilib}"
 
         msg2 "extra: %s" "${extra}"
+        msg2 "office_installer: %s" "${office_installer}"
         msg2 "permalink: %s" "${permalink}"
 
         msg2 "netinstall: %s" "${netinstall}"
@@ -46,18 +44,19 @@ show_profile(){
         msg2 "hostname: %s" "${hostname}"
         msg2 "username: %s" "${username}"
         msg2 "password: %s" "${password}"
+        msg2 "user_shell: %s" "${user_shell}"
         msg2 "login_shell: %s" "${login_shell}"
         msg2 "addgroups: %s" "${addgroups}"
         [[ -n ${smb_workgroup} ]] && msg2 "smb_workgroup: %s" "${smb_workgroup}"
 
         msg2 "enable_systemd: %s" "${enable_systemd[*]}"
+        msg2 "enable_systemd_timers: %s" "${enable_systemd_timers[*]}"
         msg2 "enable_systemd_live: %s" "${enable_systemd_live[*]}"
         [[ -n ${disable_systemd[*]} ]] && msg2 "disable_systemd: %s" "${disable_systemd[*]}"
 
         msg2 "strict_snaps: %s" "${strict_snaps}"
         msg2 "classic_snaps: %s" "${classic_snaps}"
         msg2 "snap_channel: %s" "${snap_channel}"
-        msg2 "iso_dir: ${iso_dir}"
     fi
     reset_profile
 }
@@ -67,7 +66,7 @@ display_settings(){
     show_config
 
     msg "PROFILE:"
-    msg2 "gitlab brach: %s" "${branch}"
+    msg2 "gitlab branch: %s" "${branch}"
     msg2 "build_lists: %s" "$(show_build_lists ${list_dir_iso})"
     msg2 "build_list_iso: %s" "${build_list_iso}"
     msg2 "is_build_list: %s" "${is_build_list}"
@@ -84,16 +83,8 @@ display_settings(){
     msg2 "iso_only: %s" "${iso_only}"
     msg2 "persist: %s" "${persist}"
     msg2 "extra: %s" "${full_iso}"
-    msg2 "checksumiso: %s" "${checksum}"
-    msg2 "torrent: %s" "${torrent}"
-    msg2 "zsync: %s" "${zsync}"
     msg2 "permalink: %s" "${permalink}"
-
-    if ${torrent}; then
-        msg2 "tracker_url: %s" "${tracker_url}"
-        msg2 "piece_size: %s" "${piece_size}"
-        msg2 "torrent_meta: %s" "${torrent_meta}"
-    fi
+    msg2 "office_installer: %s" "${office_installer}"
 
     msg "DIST SETTINGS:"
     msg2 "dist_name: %s" "${dist_name}"
@@ -109,7 +100,7 @@ display_settings(){
 
 load_user_info
 
-load_config "${USERCONFDIR}/arch-tools.conf" || load_config "${SYSCONFDIR}/arch-tools.conf"
+load_config "${USERCONFDIR}/manjaro-tools.conf" || load_config "${SYSCONFDIR}/manjaro-tools.conf"
 
 # to force old way to have buildiso run in iso-profiles dir
 # run_dir=$(pwd)
@@ -120,14 +111,10 @@ clean_first=true
 pretend=false
 images_only=false
 iso_only=false
-verbose=true
+verbose=false
 persist=false
 initialize=false
-update_release_symlinks=""
 permalink=false
-torrent=true
-zsync=true
-checksum=true
 
 usage() {
     echo "Usage: ${0##*/} [options]"
@@ -144,17 +131,14 @@ usage() {
     echo "                       [default: ${kernel}]"
     echo '    -l                 Create permalink'
     echo '    -m                 Set SquashFS image mode to persistence'
+    echo '    -n                 Disable multilib'
     echo "    -p <profile>       Buildset or profile [default: ${build_list_iso}]"
+    echo '    -o                 Enable office installer module'    
     echo '    -q                 Query settings and pretend build'
     echo '    -r <dir>           Chroots directory'
     echo "                       [default: ${chroots_iso}]"
-    echo '    -s                 create checksums'
-    echo "                       [default: ${iso_dir}]"
     echo '    -t <dir>           Target directory'
-    echo "    -T <timestamp>     Override timestamp [default: ${dist_timestamp}]"
     echo "                       [default: ${cache_dir_iso}]"
-    echo '    -u                 Create ISO torrent'
-    echo '    -U                 Create ISO zsync file'
     echo '    -v                 Verbose output to log file, show profile detail (-q)'
     echo '    -x                 Build images only'
     echo '    -z                 Generate iso only'
@@ -167,7 +151,7 @@ usage() {
 
 orig_argv=("$@")
 
-opts='p:a:b:r:t:T:k:g:d:R:cfzxmuUsvqhil'
+opts='p:a:b:r:t:k:g:d:cfzxmnvqhilo'
 
 while getopts "${opts}" arg; do
     case "${arg}" in
@@ -180,18 +164,16 @@ while getopts "${opts}" arg; do
         g) gpgkey="$OPTARG" ;;
         k) kernel="$OPTARG" ;;
         m) persist=true ;;
+        n) no_multilib=true ;;          # only exist if set here
         p) build_list_iso="$OPTARG" ;;
         q) pretend=true ;;
         r) chroots_iso="$OPTARG" ;;
-        s) checksum=true ;;
         t) cache_dir_iso="$OPTARG" ;;
-        T) dist_timestamp="$OPTARG" ;;
-        u) torrent=true ;;
-        U) zsync=true ;;
         v) verbose=true ;;
         x) images_only=true ;;
         z) iso_only=true ;;
         l) permalink=true ;;
+        o) office_installer=true ;;
         h|?) usage 0 ;;
         *) echo "invalid argument '${arg}'"; usage 1 ;;
     esac
@@ -202,8 +184,8 @@ shift $(($OPTIND - 1))
 if ${initialize}; then
 	msg "Initialize iso profiles ${branch}"
 	init_profiles
-	msg2 "Done: iso profiles are stored in /var/cache/arch-tools/iso-profiles"
-	exit 0
+	msg2 "Done: iso profiles are stored in /usr/share/manjaro-tools/iso-profiles"
+	exit 1
 fi
 
 timer_start=$(get_timer)

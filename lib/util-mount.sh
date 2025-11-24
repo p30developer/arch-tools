@@ -14,7 +14,7 @@ ignore_error() {
 }
 
 parse_fstab(){
-    echo $(perl -ane 'printf("%s:%s:%s\n", @F[0,1], @F[3]) if $F[0] =~ m#^UUID=#;' $1/etc/fstab)
+    echo $(perl -ane 'printf("%s:%s\n", @F[0,1]) if $F[0] =~ m#^UUID=#;' $1/etc/fstab)
 # 	perl -ane 'printf("%s:%s\n", @F[0,1]) if $F[0] =~ m#^/dev#;' $1/etc/fstab
 # 	perl -ane 'printf("%s:%s\n", @F[0,1]) if $F[0] =~ m#^LABEL=#;' $1/etc/fstab
 }
@@ -26,7 +26,11 @@ detect(){
 
 # $1: os-prober array
 get_os_name(){
-    echo "$(cut -d':' -f2 <<<"$1")"
+    local str=$1
+    str="${str#*:}"
+    str="${str#*:}"
+    str="${str%:*}"
+    echo "$str"
 }
 
 get_chroot_arch(){
@@ -43,9 +47,9 @@ chroot_part_mount() {
 select_os(){
     local detected_os_list=( $(detect) ) os_list=() count select os_str os_root
     for os in ${detected_os_list[@]}; do
-        if [[ "$(cut -d':' -f4 <<<"$os")" = "linux" ]]; then
-            os_list+=($os)
-        fi
+        case ${os##*:} in
+            'linux') os_list+=($os)
+        esac
     done
     count=${#os_list[@]}
     if [[ ${count} < 1 ]]; then
@@ -65,7 +69,7 @@ select_os(){
     os_str=${os_list[$select]}
     os_root=${os_str%%:*}
     msg "Mounting (%s) [%s]" "$(get_os_name $os_str)" "$os_root"
-    chroot_mount_partitions "$1" "$os_root" "$(cut -d':' -f7 <<<"$os_str")"
+    chroot_mount_partitions "$1" "$os_root"
 }
 
 chroot_mount_partitions(){
@@ -76,24 +80,28 @@ chroot_mount_partitions(){
     [[ $(trap -p EXIT) ]] && die 'Error! Attempting to overwrite existing EXIT trap'
     trap 'trap_handler' EXIT
 
-    chroot_part_mount $2 $1 $( [ ! -z "$3" ] && printf "%s%s" '-o ' "$3" )
+    chroot_part_mount $2 $1
 
     local mounts=$(parse_fstab "$1")
 
     for entry in ${mounts[@]}; do
         entry=${entry//UUID=}
-        local dev="$(cut -d':' -f1 <<<"$entry")" mp="$(cut -d':' -f2 <<<"$entry")" options="$(cut -d':' -f3 <<<"$entry")"
-        case "$mp" in
+        local dev=${entry%:*} mp=${entry#*:}
+        case "${entry#*:}" in
             '/'|'swap'|'none') continue ;;
-            *) chroot_part_mount "/dev/disk/by-uuid/${dev}" "$1${mp}" -o "$options" ;;
+            *) chroot_part_mount "/dev/disk/by-uuid/${dev}" "$1${mp}" ;;
         esac
     done
 
     local chroot_arch=$(get_chroot_arch $1)
     [[ ${chroot_arch} == x86-64 ]] && chroot_arch=${chroot_arch/-/_}
-    if [[ ${chroot_arch} != ${target_arch} ]]; then
-        die "You can't chroot into %s from %s host!" "${chroot_arch}" "${target_arch}"
-    fi
+    case ${target_arch} in
+        i686)
+            if [[ ${chroot_arch} == x86_64 ]]; then
+                die "You can't chroot from %s host into %s!" "${target_arch}" "${chroot_arch}"
+            fi
+        ;;
+    esac
 
     chroot_mount_conditional "! mountpoint -q '$1'" "$1" "$1" --bind &&
     chroot_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&

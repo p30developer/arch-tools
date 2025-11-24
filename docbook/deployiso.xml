@@ -21,10 +21,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with systemd; If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="check-yaml" xmlns:xi="http://www.w3.org/2001/XInclude">
+<refentry id="deployiso" xmlns:xi="http://www.w3.org/2001/XInclude">
 
     <refentryinfo>
-        <title>check-yaml-+</title>
+        <title>deployiso-+</title>
         <productname>manjaro-tools</productname>
 
         <authorgroup>
@@ -38,18 +38,18 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     </refentryinfo>
 
     <refmeta>
-        <refentrytitle>check-yaml</refentrytitle>
+        <refentrytitle>deployiso</refentrytitle>
         <manvolnum>1</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>check-yaml</refname>
-        <refpurpose>check-yaml is used to generate and validate yaml files used by calamares. </refpurpose>
+        <refname>deployiso</refname>
+        <refpurpose>deployiso is used to upload a particular ISO or a set of ISOs. </refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <cmdsynopsis>
-            <command>check-yaml</command>
+            <command>deployiso</command>
             <arg choice="opt" rep="repeat">OPTIONS</arg>
         </cmdsynopsis>
     </refsynopsisdiv>
@@ -57,9 +57,9 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     <refsect1>
         <title>Description</title>
 
-        <para><command>check-yaml</command> is used to generate and validate yaml files used by calamares.</para>
+        <para><command>deployiso</command> is used to upload a particular ISO or a set of ISOs. </para>
 
-        <para>check-yaml is a script to generate and validate yaml files by yaml schemas. Buildiso generates these files also, but check-yaml is a standalone version without the need to build the entire iso.</para>
+        <para>deployiso is a script to upload a specific iso or a buiildset to SF.</para>
 
     </refsect1>
 
@@ -70,51 +70,59 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
         <variablelist>
             <varlistentry>
-                <term><option>-p PROFILE...</option></term>
+                <term><option>-d</option></term>
 
-                <listitem><para>Name of the build list or name of the directory.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-a i686|x86_64</option></term>
-
-                <listitem><para>Architecture that the yaml will be created for. Can be i686 or x86_64.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-k linuxXXX</option></term>
-
-                <listitem><para>The kernel the yaml will be created for.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-c</option></term>
-
-                <listitem><para>Create calamares yaml conf files.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-g</option></term>
-
-                <listitem><para>Generate a packman group netgroup yaml file.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-v</option></term>
-
-                <listitem><para>Validate the yaml file by yaml schema.</para></listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><option>-q</option></term>
-
-                <listitem><para>Query settings.</para></listitem>
+                <listitem><para>Use hidden remote directory.
+                The target directory name will be prefaced with a dot.</para></listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><option>-h</option></term>
 
                 <listitem><para>Help.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-l</option></term>
+
+                <listitem><para>Limit bandwidth in kB/s.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-p PROFILE...</option></term>
+
+                <listitem><para>Name of the build list or name of the directory
+                you will upload.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-q</option></term>
+
+                <listitem><para>Query settings and pretend upload.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-s</option></term>
+
+                <listitem><para>Sign ISO and create checksums before uploading.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-t</option></term>
+
+                <listitem><para>Create a torrent from iso file.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-u</option></term>
+
+                <listitem><para>Update remote iso.</para></listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-v</option></term>
+
+                <listitem><para>Verbose output.</para></listitem>
             </varlistentry>
         </variablelist>
 

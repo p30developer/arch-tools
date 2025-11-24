@@ -26,9 +26,6 @@ show_profile(){
     msg2 "nonfree_mhwd: %s" "${nonfree_mhwd}"
     msg2 "autologin: %s" "${autologin}"
     msg2 "nonfree_mhwd: %s" "${nonfree_mhwd}"
-    msg2 "plymouth_boot: %s" "${plymouth_boot}"
-    ${plymouth_boot} && msg2 "plymouth_theme: %s" "${plymouth_theme}"
-
 
     [[ ${target_arch} == 'x86_64' ]] && msg2 "multilib: %s" "${multilib}"
 
@@ -79,7 +76,7 @@ display_settings(){
 
 load_user_info
 
-load_config "${USERCONFDIR}/arch-tools.conf" || load_config "${SYSCONFDIR}/arch-tools.conf"
+load_config "${USERCONFDIR}/manjaro-tools.conf" || load_config "${SYSCONFDIR}/manjaro-tools.conf"
 
 # to force old way to have buildiso run in iso-profiles dir
 # run_dir=$(pwd)

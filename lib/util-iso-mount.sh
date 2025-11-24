@@ -11,7 +11,8 @@
 
 track_img() {
     info "mount: [%s]" "$2"
-    mount "$@" && IMG_ACTIVE_MOUNTS=("$2" "${IMG_ACTIVE_MOUNTS[@]}")
+    LOOPBACK=$(losetup --show -f "$1")
+    mount $LOOPBACK "$2" && IMG_ACTIVE_MOUNTS=("$2" "${IMG_ACTIVE_MOUNTS[@]}")
 }
 
 mount_img() {
@@ -24,6 +25,7 @@ umount_img() {
     if [[ -n ${IMG_ACTIVE_MOUNTS[@]} ]]; then
         info "umount: [%s]" "${IMG_ACTIVE_MOUNTS[@]}"
         umount "${IMG_ACTIVE_MOUNTS[@]}"
+        losetup -d $LOOPBACK
         unset IMG_ACTIVE_MOUNTS
         rm -r "$1"
     fi

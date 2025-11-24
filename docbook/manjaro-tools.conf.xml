@@ -1,18 +1,18 @@
 <?xml version='1.0'?> <!--*-nxml-*-->
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+"https://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
 <!--
-This file is part of arch-tools.
+This file is part of manjaro-tools.
 
-Copyright 2015 arch Developers
+Copyright 2015 Manjaro Developers
 
-arch-tools is free software; you can redistribute it and/or modify it
+manjaro-tools is free software; you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version.
 
-arch-tools is distributed in the hope that it will be useful, but
+manjaro-tools is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
@@ -25,7 +25,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
     <refentryinfo>
         <title>profile.conf-+</title>
-        <productname>arch-tools</productname>
+        <productname>manjaro-tools</productname>
 
         <authorgroup>
         <author>
@@ -38,23 +38,23 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     </refentryinfo>
 
     <refmeta>
-        <refentrytitle>arch-tools.conf</refentrytitle>
+        <refentrytitle>manjaro-tools.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>arch-tools.conf</refname>
-        <refpurpose>general configuration file for arch-tools</refpurpose>
+        <refname>manjaro-tools.conf</refname>
+        <refpurpose>general configuration file for manjaro-tools</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
-        <para><filename>arch-tools.conf</filename></para>
+        <para><filename>manjaro-tools.conf</filename></para>
     </refsynopsisdiv>
 
     <refsect1>
         <title>Description</title>
 
-        <para>arch-tools.conf is a general configuration file for all arch-tools binaries. </para>
+        <para>manjaro-tools.conf is a general configuration file for all manjaro-tools binaries. </para>
 
         <para>By default all the options in the file are commented, with a value equal to the
         default value. To change it just uncomment and put the desired value.</para>
@@ -91,7 +91,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>cache_dir=</varname></term>
 
                 <listitem><para>Cache dir where buildpkg and buildise will cache
-                packages. Default is "/var/cache/arch-tools".
+                packages. Default is "/var/cache/manjaro-tools".
                 </para></listitem>
             </varlistentry>
 
@@ -100,14 +100,14 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>chroots_dir=</varname></term>
 
                 <listitem><para>Build dir where buildpkg or buildiso chroot
-                environment will be created. Default is "/var/lib/arch-tools".
+                environment will be created. Default is "/var/lib/manjaro-tools".
                 </para></listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><varname>log_dir=</varname></term>
 
-                <listitem><para>Log dir where buildiso log the build process. Default is  "/var/log/arch-tools".
+                <listitem><para>Log dir where buildiso log the build process. Default is  "/var/log/manjaro-tools".
                 </para></listitem>
             </varlistentry>
 
@@ -131,7 +131,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <varlistentry>
                 <term><varname>repo_tree=</varname></term>
 
-                <listitem><para>arch package tree. Default is
+                <listitem><para>Manjaro package tree. Default is
                 "('core' 'extra' 'community' 'multilib')".
                 </para></listitem>
             </varlistentry>
@@ -139,7 +139,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <varlistentry>
                 <term><varname>host_tree=</varname></term>
 
-                <listitem><para>Host tree. Default is "https://github.com/arch".
+                <listitem><para>Host tree. Default is "https://github.com/manjaro".
                 </para></listitem>
             </varlistentry>
 
@@ -212,7 +212,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
             <term><varname>kernel=</varname></term>
 
             <listitem><para>Takes a string corresponding to a
-            arch kernel package (ex: linux318 for linux 3.18).
+            manjaro kernel package (ex: linux318 for linux 3.18).
             </para></listitem>
         </varlistentry>
 
@@ -253,7 +253,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
                 <term><varname>project=</varname></term>
 
                 <listitem><para>Default OSDN project name to be used for upload.
-                    If unset, 'arch' or 'arch-community' will be determined
+                    If unset, 'manjaro' or 'manjaro-community' will be determined
                     automatically based on profile.
                 </para></listitem>
             </varlistentry>
@@ -286,11 +286,11 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
     <refsect1>
         <title>See Also</title>
         <para>
-            <citerefentry project='arch-tools'><refentrytitle>profiles.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
-            <citerefentry project='arch-tools'><refentrytitle>buildiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='arch-tools'><refentrytitle>deployiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='arch-tools'><refentrytitle>buildtree</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-            <citerefentry project='arch-tools'><refentrytitle>buildpkg</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+            <citerefentry project='manjaro-tools'><refentrytitle>profiles.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+            <citerefentry project='manjaro-tools'><refentrytitle>buildiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='manjaro-tools'><refentrytitle>deployiso</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='manjaro-tools'><refentrytitle>buildtree</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+            <citerefentry project='manjaro-tools'><refentrytitle>buildpkg</refentrytitle><manvolnum>1</manvolnum></citerefentry>
         </para>
     </refsect1>
 

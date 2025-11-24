@@ -66,7 +66,7 @@ get_pac_mirrors_conf(){
     local conf="$tmp_dir/pacman-mirrors-$1.conf"
     cp "${DATADIR}/pacman-mirrors.conf" "$conf"
     sed -i "$conf" \
-        -e "s|Branch = archlinux|Branch = $1|"
+        -e "s|Branch = stable|Branch = $1|"
 
     echo "$conf"
 }
@@ -162,12 +162,6 @@ check_root() {
 
 copy_mirrorlist(){
     cp -a /etc/pacman.d/mirrorlist "$1/etc/pacman.d/"
-    cp -a /etc/pacman.d/chaotic-mirrorlist "$1/etc/pacman.d/"
-
-    if [[ -d /etc/pacman.d/blackarch-mirrorlist ]] && [[ ! -d $1/etc/pacman.d/blackarch-mirrorlist ]]; then
-        cp -a /etc/pacman.d/blackarch-mirrorlist "$1/etc/pacman.d/"
-    fi
-
 }
 
 copy_keyring(){
@@ -204,24 +198,24 @@ get_branch(){
 set_branch(){
     if [[ $1 =~ "rootfs" ]]; then
         info "Setting mirrorlist branch: %s" "$2"
-        sed -e "s|/archlinux|/$2|g" -i "$1/etc/pacman.d/mirrorlist"
+        sed -e "s|/stable|/$2|g" -i "$1/etc/pacman.d/mirrorlist"
     fi
 }
 
 init_common(){
-    [[ -z ${target_branch} ]] && target_branch='archlinux'
+    [[ -z ${target_branch} ]] && target_branch='stable'
 
     [[ -z ${target_arch} ]] && target_arch=$(uname -m)
 
-    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/arch-tools/arch-builds'
+    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/manjaro-tools'
 
-    [[ -z ${chroots_dir} ]] && chroots_dir='/var/cache/arch-tools/arch-chroots'
+    [[ -z ${chroots_dir} ]] && chroots_dir='/var/lib/manjaro-tools'
 
-    [[ -z ${log_dir} ]] && log_dir='/var/cache/arch-tools/arch-logs'
+    [[ -z ${log_dir} ]] && log_dir='/var/log/manjaro-tools'
 
-    [[ -z ${build_mirror} ]] && build_mirror='http://mirrors.kernel.org'
+    [[ -z ${build_mirror} ]] && build_mirror='https://mirror.easyname.at/manjaro'
 
-    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/arch-tools'
+    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/manjaro-tools'
 }
 
 init_buildtree(){
@@ -231,8 +225,7 @@ init_buildtree(){
 
     [[ -z ${repo_tree[@]} ]] && repo_tree=('core' 'extra' 'community' 'multilib')
 
-
-    [[ -z ${host_tree} ]] && host_tree='https://gitlab.archlinux.org/archlinux'
+    [[ -z ${host_tree} ]] && host_tree='https://github.com/manjaro'
 
     [[ -z ${host_tree_abs} ]] && host_tree_abs='https://projects.archlinux.org/git/svntogit'
 }
@@ -310,24 +303,22 @@ init_buildiso(){
 
     ##### iso settings #####
 
-    [[ -z ${dist_timestamp} ]] && dist_timestamp="$(date +%y%m%d)"
-
     [[ -z ${dist_release} ]] && dist_release=$(get_release)
 
     [[ -z ${dist_codename} ]] && dist_codename=$(get_codename)
 
-    dist_name=$(get_distname)
+    [[ -z ${dist_name} ]] && dist_name=$(get_distname)
 
-    iso_name=$(get_osid)
+    [[ -z ${iso_name} ]] && iso_name=$(get_osid)
 
-    [[ -z ${dist_branding} ]] && dist_branding="arch"
+    [[ -z ${dist_branding} ]] && dist_branding="MANJARO"
 
-    [[ -z ${iso_compression} ]] && iso_compression='xz'
+    [[ -z ${iso_compression} ]] && iso_compression='zstd'
 
-    [[ -z ${kernel} ]] && kernel="linux-zen"
-
+    [[ -z ${kernel} ]] && kernel="linux66"
+    
     load_run_dir "${profile_repo}"
-
+    
     if [[ -d ${run_dir}/.git ]]; then
     	current_path=$(pwd)
     	cd ${run_dir}
@@ -339,40 +330,40 @@ init_buildiso(){
 
     [[ -z ${gpgkey} ]] && gpgkey=''
 
-    mhwd_repo="/opt/ght/pkg"
+    mhwd_repo="/opt/mhwd/pkg"
 }
 
 init_calamares(){
-
+	
 	[[ -z ${welcomestyle} ]] && welcomestyle=false
-
+	
 	[[ -z ${welcomelogo} ]] && welcomelogo=true
-
+	
 	[[ -z ${windowexp} ]] && windowexp=noexpand
-
-	[[ -z ${windowsize} ]] && windowsize="910px,664px"
+	
+	[[ -z ${windowsize} ]] && windowsize="800px,560px"
 
 	[[ -z ${windowplacement} ]] && windowplacement="center"
-
-	[[ -z ${sidebarbackground} ]] && sidebarbackground=#5c0285
-
+	
+	[[ -z ${sidebarbackground} ]] && sidebarbackground=#454948
+	
 	[[ -z ${sidebartext} ]] &&  sidebartext=#efefef
-
-	[[ -z ${sidebartextcurrent} ]] && sidebartextcurrent=#efefef
-
-	[[ -z ${sidebarbackgroundcurrent} ]] && sidebarbackgroundcurrent=#7f03b8
+	
+	[[ -z ${sidebartextselect} ]] && sidebartextselect=#4d915e
+	
+	[[ -z ${sidebartexthighlight} ]] && sidebartexthighlight=#1a1c1b
 }
-
+	
 
 init_deployiso(){
 
-    host="sourceforge.net"
+    host="osdn.net"
 
     [[ -z ${account} ]] && account="[SetUser]"
 
     [[ -z ${alt_storage} ]] && alt_storage=false
 
-    [[ -z ${tracker_url} ]] && tracker_url='udp://lonewolf-builder.duckdns.org:23069'
+    [[ -z ${tracker_url} ]] && tracker_url='udp://tracker.opentrackr.org:1337'
 
     [[ -z ${piece_size} ]] && piece_size=21
 
@@ -383,9 +374,9 @@ load_config(){
 
     [[ -f $1 ]] || return 1
 
-    arch_tools_conf="$1"
+    manjaro_tools_conf="$1"
 
-    [[ -r ${arch_tools_conf} ]] && source ${arch_tools_conf}
+    [[ -r ${manjaro_tools_conf} ]] && source ${manjaro_tools_conf}
 
     init_common
 
@@ -395,8 +386,8 @@ load_config(){
 
     init_buildiso
 
-    init_calamares
-
+    init_calamares	
+	
     init_deployiso
 
     return 0
@@ -418,69 +409,65 @@ load_profile_config(){
     [[ -z ${snap_channel} ]] && snap_channel="stable"
 
     [[ -z ${multilib} ]] && multilib="true"
-
-    [[ -z ${plymouth_boot} ]] && plymouth_boot="true"
+    [[ ${no_multilib} == 'true' ]] && multilib="false"
 
     [[ -z ${nonfree_mhwd} ]] && nonfree_mhwd="true"
 
     [[ -z ${efi_boot_loader} ]] && efi_boot_loader="grub"
 
-    [[ -z ${hostname} ]] && hostname="arch"
+    [[ -z ${hostname} ]] && hostname="manjaro"
 
-    [[ -z ${username} ]] && username="arch"
+    [[ -z ${username} ]] && username="manjaro"
 
-    [[ -z ${use_dracut} ]] && use_dracut="true"
+    [[ -z ${password} ]] && password="manjaro"
 
-    [[ -z ${plymouth_theme} ]] && plymouth_theme="arch"
+    [[ -z ${user_shell} ]] && user_shell='/bin/bash'
 
-    [[ -z ${password} ]] && password="arch"
-
-    [[ -z ${user_shell} ]] && user_shell='/bin/zsh'
-
-    [[ -z ${login_shell} ]] && login_shell='/bin/zsh'
+    [[ -z ${login_shell} ]] && login_shell='/bin/bash'
 
     if [[ -z ${addgroups} ]]; then
         addgroups="lp,network,power,sys,wheel"
     fi
 
     if [[ -z ${enable_systemd[@]} ]]; then
-        enable_systemd=('avahi-daemon' 'bluetooth' 'cronie' 'ModemManager' 'NetworkManager' 'cups' 'systemd-timesyncd')
+        enable_systemd=('avahi-daemon' 'bluetooth' 'cronie' 'ModemManager' 'NetworkManager' 'org.cups.cupsd' 'tlp' 'tlp-sleep' 'ufw')
     fi
 
     [[ -z ${disable_systemd[@]} ]] && disable_systemd=('pacman-init')
 
     if [[ -z ${enable_systemd_live[@]} ]]; then
-        enable_systemd_live=('arch-live' 'ght-live' 'pacman-init' 'mirrors-live')
+        enable_systemd_live=('manjaro-live' 'mhwd-live' 'pacman-init' 'mirrors-live')
     fi
 
     if [[ ${displaymanager} != "none" ]]; then
         enable_systemd+=("${displaymanager}")
     fi
-
+    
     [[ -z ${needs_internet} ]] && needs_internet='false'
     [[ -z ${netinstall} ]] && netinstall='false'
     [[ -z ${netinstall_label} ]] && netinstall_label='Package selection'
 
-    [[ -z ${zfs_used} ]] && zfs_used='false'
-
     [[ -z ${mhwd_used} ]] && mhwd_used='true'
 
     [[ -z ${oem_used} ]] && oem_used='false'
+    [[ -z ${set_oem_user} ]] && set_oem_user='true'
+    [[ -z ${oem_use_postcfg} ]] && oem_use_postcfg='false'
 
     [[ -z ${chrootcfg} ]] && chrootcfg='false'
 
-#?????? with calamres must replace
-    netgroups="https://gitlab.archlinux.org/archlinux/packages/pkgbuilds/garuda-pkgbuilds/-/raw/master/pkgbuilds/calamares-netinstall-settings/netinstall-software.yaml"
+    netgroups="https://gitlab.manjaro.org/applications/calamares-netgroups/-/raw/master/"
 
     [[ -z ${geoip} ]] && geoip='true'
 
     [[ -z ${smb_workgroup} ]] && smb_workgroup=''
 
-    [[ -z ${extra} ]] && extra='true'
+    [[ -z ${extra} ]] && extra='false'
     [[ ${full_iso} ]] && extra='true'
 
     basic='true'
     [[ ${extra} == 'true' ]] && basic='false'
+
+    [[ -z ${office_installer} ]] && office_installer="false"
 
     return 0
 }
@@ -494,11 +481,11 @@ get_edition(){
 
 get_project(){
     case "${edition}" in
-        'arch')
-            project="arch"
+        'manjaro')
+            project="manjaro"
         ;;
-        'arch-wm')
-            project="arch-wm"
+        'community')
+            project="manjaro-community"
         ;;
     esac
     echo "${project}"
@@ -522,17 +509,16 @@ reset_profile(){
     unset enable_systemd_live
     unset disable_systemd_live
     unset packages_desktop
-    unset packages_desktop_common
     unset packages_mhwd
     unset user_shell
     unset login_shell
     unset netinstall
     unset chrootcfg
     unset geoip
-    unset plymouth_boot
-    unset plymouth_theme
     unset extra
     unset full_iso
+    unset office_installer
+    unset no_multilib
 }
 
 check_profile(){
@@ -564,7 +550,6 @@ check_profile(){
     fi
 
     [[ -f "$1/Packages-Desktop" ]] && packages_desktop=$1/Packages-Desktop
-    [[ -f "$1/Packages-Desktop-Common" ]] && packages_desktop_common=$1/Packages-Desktop-Common
 
     [[ -f "$1/Packages-Mhwd" ]] && packages_mhwd=$1/Packages-Mhwd
 
@@ -574,7 +559,6 @@ check_profile(){
 }
 
 # $1: file name
-# $2: append, default: false
 load_pkgs(){
     info "Loading Packages: [%s] ..." "${1##*/}"
 
@@ -643,13 +627,20 @@ load_pkgs(){
     case "${edition}" in
         'sonar')
             _edition="s|>sonar||g"
-            _edition_rm="s|>arch.*||g"
+            _edition_rm="s|>manjaro.*||g"
         ;;
         *)
-            _edition="s|>arch||g"
+            _edition="s|>manjaro||g"
             _edition_rm="s|>sonar.*||g"
         ;;
     esac
+
+    local _office _office_rm
+    if ${office_installer}; then
+        _office="s|>office||g"
+    else
+        _office_rm="s|>office.*||g"
+    fi
 
     local _blacklist="s|>blacklist.*||g" \
         _kernel="s|KERNEL|$kernel|g" \
@@ -660,7 +651,7 @@ load_pkgs(){
         _purge="s|>cleanup.*||g" \
         _purge_rm="s|>cleanup||g"
 
-    local pkgs=$(sed "$_com_rm" "$1" \
+    packages=$(sed "$_com_rm" "$1" \
             | sed "$_space" \
             | sed "$_blacklist" \
             | sed "$_purge" \
@@ -678,13 +669,9 @@ load_pkgs(){
             | sed "$_basic_rm" \
             | sed "$_extra" \
             | sed "$_extra_rm" \
+            | sed "$_office" \
+            | sed "$_office_rm" \
             | sed "$_clean")
-
-    if [[ "$2" == "true" ]]; then
-        packages="$packages $pkgs"
-    else
-        packages="$pkgs"
-    fi
 
     if [[ $1 == "${packages_mhwd}" ]]; then
 
@@ -714,8 +701,7 @@ clean_dir(){
 write_repo_conf(){
     local repos=$(find $USER_HOME -type f -name "repo_info")
     local path name
-    _workdir='/var/cache/arch-tools'
-    [[ -z ${repos[@]} ]] && run_dir=${_workdir}/iso-profiles && return 1
+    [[ -z ${repos[@]} ]] && run_dir=${DATADIR}/iso-profiles && return 1
     for r in ${repos[@]}; do
         path=${r%/repo_info}
         name=${path##*/}
@@ -732,7 +718,7 @@ load_user_info(){
         USER_HOME=$HOME
     fi
 
-    USERCONFDIR="$USER_HOME/.config/arch-tools"
+    USERCONFDIR="$USER_HOME/.config/manjaro-tools"
     prepare_dir "${USERCONFDIR}"
 }
 
@@ -743,15 +729,15 @@ load_run_dir(){
 }
 
 show_version(){
-    msg "arch-tools"
+    msg "manjaro-tools"
     msg2 "version: %s" "${version}"
 }
 
 show_config(){
-    if [[ -f ${USERCONFDIR}/arch-tools.conf ]]; then
-        msg2 "config: %s" "~/.config/arch-tools/arch-tools.conf"
+    if [[ -f ${USERCONFDIR}/manjaro-tools.conf ]]; then
+        msg2 "config: %s" "~/.config/manjaro-tools/manjaro-tools.conf"
     else
-        msg2 "config: %s" "${arch_tools_conf}"
+        msg2 "config: %s" "${manjaro_tools_conf}"
     fi
 }
 
@@ -801,7 +787,7 @@ is_valid_arch_iso(){
 
 is_valid_branch(){
     case $1 in
-        'stable'|'stable-staging'|'testing'|'unstable'|'archlinux') return 0 ;;
+        'stable'|'stable-staging'|'testing'|'unstable') return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -849,23 +835,24 @@ create_chksums() {
 }
 
 init_profiles() {
-	_workdir='/var/cache/arch-tools'
-	if [[ -d ${_workdir}/iso-profiles ]]; then
-		rm -Rf ${_workdir}/iso-profiles
-	fi
-	git clone -q --depth 1 -b ${branch} https://github.com/p30developer/iso-profiles.git ${_workdir}/iso-profiles/
+    _workdir='/usr/share/manjaro-tools'
+    if [[ -d ${_workdir}/iso-profiles ]]; then
+        rm -Rf ${_workdir}/iso-profiles
+    fi
+    git clone -q --depth 1 -b ${branch} https://gitlab.manjaro.org/profiles-and-settings/iso-profiles.git ${_workdir}/iso-profiles/
 
-	#Check if git clone is done
-	if [[ -d ${_workdir}/iso-profiles/arch ]] || [[ -d ${_workdir}/iso-profiles/community ]]; then
+    #Check if git clone is done
+    if [[ -d ${_workdir}/iso-profiles/manjaro ]] && [[ -d ${_workdir}/iso-profiles/community ]]; then
 
-		for i in ${_workdir}/iso-profiles/.gitignore ${_workdir}/iso-profiles/README.md; do
-		rm -f $i
-		done
+        for i in ${_workdir}/iso-profiles/.gitignore ${_workdir}/iso-profiles/README.md; do
+        rm -f $i
+        done
 
-		for i in ${_workdir}/iso-profiles/.git ${_workdir}/iso-profiles/sonar; do
-			rm -Rf $i
-		done
-	else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://github.com/p30developer/iso-profiles'"
-	exit 1
-	fi
+        for i in ${_workdir}/iso-profiles/.git ${_workdir}/iso-profiles/sonar; do
+            rm -Rf $i
+        done
+    else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://gitlab.manjaro.org/profiles-and-settings/iso-profiles'"
+    exit 1
+    fi
 }
+

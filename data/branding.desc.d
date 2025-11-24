@@ -1,5 +1,5 @@
 ---
-componentName:  arch
+componentName:  manjaro
 
 # This selects between different welcome texts. When false, uses
 # the traditional "Welcome to the %1 installer.", and when true,
@@ -51,7 +51,7 @@ strings:
     shortProductName:    ${dist_name}
     version:             ${dist_release}
     shortVersion:        ${dist_release}
-    versionedName:       ${dist_name} Linux ${dist_release}
+    versionedName:       ${dist_name} Linux ${dist_release} "${dist_codename}"
     shortVersionedName:  ${dist_name} ${dist_release}
     bootloaderEntryName: ${dist_name}
 

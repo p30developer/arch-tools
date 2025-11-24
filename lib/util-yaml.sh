@@ -10,7 +10,7 @@
 # GNU General Public License for more details.
 
 write_machineid_conf(){
-    local conf="${modules_dir}/machineid.conf"
+    local conf="${etc_config_dir}/machineid.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo '---' > "$conf"
     echo "systemd: true" >> $conf
@@ -20,7 +20,7 @@ write_machineid_conf(){
 
 write_finished_conf(){
     msg2 "Writing %s ..." "finished.conf"
-    local conf="${modules_dir}/finished.conf" cmd="systemctl reboot"
+    local conf="${etc_config_dir}/finished.conf" cmd="systemctl reboot"
     echo '---' > "$conf"
     echo 'restartNowEnabled: true' >> "$conf"
     echo 'restartNowChecked: false' >> "$conf"
@@ -42,46 +42,97 @@ get_preset(){
 }
 
 write_bootloader_conf(){
-    local conf="${modules_dir}/bootloader.conf"
+    local conf="${etc_config_dir}/bootloader.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     source "$(get_preset)"
     echo '---' > "$conf"
     echo "efiBootLoader: \"${efi_boot_loader}\"" >> "$conf"
+    echo "kernel: \"${ALL_kver#*/boot}\"" >> "$conf"
+    echo "img: \"${default_image#*/boot}\"" >> "$conf"
+    echo "fallback: \"${fallback_image#*/boot}\"" >> "$conf"
+    echo 'timeout: "10"' >> "$conf"
+    echo "kernelLine: \", with ${kernel}\"" >> "$conf"
+    echo "fallbackKernelLine: \", with ${kernel} (fallback initramfs)\"" >> "$conf"
     echo 'grubInstall: "grub-install"' >> "$conf"
     echo 'grubMkconfig: "grub-mkconfig"' >> "$conf"
     echo 'grubCfg: "/boot/grub/grub.cfg"' >> "$conf"
     echo 'grubProbe: "grub-probe"' >> "$conf"
     echo 'efiBootMgr: "efibootmgr"' >> "$conf"
+    echo '#efiBootloaderId: "dirname"' >> "$conf"
     echo 'installEFIFallback: true' >> "$conf"
 }
 
-write_services_conf(){
-    local conf="${modules_dir}/services-systemd.conf"
+write_servicescfg_conf(){
+    local conf="${etc_config_dir}/servicescfg.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo '---' >  "$conf"
-    echo 'units:' > "$conf"
-    for s in ${enable_systemd[@]}; do
-        echo "    - name: $s" >> "$conf"
-        echo '      action: "enable"' >> "$conf"
-    done
-    echo '    - name: "graphical"' >> "$conf"
-    echo '      action: "set-default"' >> "$conf"
-    if ${zfs_used}; then
-    echo '    - name: "zfs"' >> "$conf"
-    echo '      mandatory: true' >> "$conf"
-    echo '      action: "enable"' >> "$conf"
-    echo '    - name: "zfs-import"' >> "$conf"
-    echo '      mandatory: true' >> "$conf"
-    echo '      action: "enable"' >> "$conf"
+    echo '' >> "$conf"
+    echo 'services:' >> "$conf"
+    echo '    enabled:' >> "$conf"
+}
+
+write_services_conf(){
+    local conf="${etc_config_dir}/services.conf"
+    local check="${modules_dir}/services.conf"
+    msg2 "Writing %s ..." "${conf##*/}"
+    echo '---' >  "$conf"
+    echo '' >> "$conf"
+    if [ ! ${#enable_systemd[@]} -eq 0 ]; then
+        if [ ! $(grep "services:" ${check} | wc -l) -eq 0 ]; then
+            echo 'services:' >> "$conf"
+        else
+            echo 'units:' >> "$conf"
+        fi
+        for s in ${enable_systemd[@]}; do
+            if [ ! $(grep "services:" ${check} | wc -l) -eq 0 ]; then
+                echo "    - name: $s" >> "$conf"
+            else
+                echo "    - name: $s.service"  >> "$conf"
+                echo '      action: "enable"' >> "$conf"
+            fi
+            echo '      mandatory: false' >> "$conf"
+            echo '' >> "$conf"
+        done
     fi
-    for s in ${disable_systemd[@]}; do
-        echo "    - name: $s" >> "$conf"
-        echo '      action: "disable"' >> "$conf"
-    done
+    if [ ! ${#enable_systemd_timers[@]} -eq 0 ]; then
+        [ ! $(grep "timers:" ${check} | wc -l) -eq 0 ] && echo 'timers:' >> "$conf"
+        for s in ${enable_systemd_timers[@]}; do
+            if [ ! $(grep "timers:" ${check} | wc -l) -eq 0 ]; then
+                echo "    - name: $s" >> "$conf"
+            else
+                echo "    - name: $s.timer"  >> "$conf"
+                echo '      action: "enable"' >> "$conf"
+            fi
+            echo '      mandatory: false' >> "$conf"
+            echo '' >> "$conf"
+        done
+    fi
+    [ ! $(grep "targets:" ${check} | wc -l) -eq 0 ] && echo 'targets:' >> "$conf"
+    if [ ! $(grep "targets:" ${check} | wc -l) -eq 0 ]; then
+                echo '    - name: "graphical"' >> "$conf"
+            else
+                echo '    - name: "graphical.target"'  >> "$conf"
+                echo '      action: "set-default"' >> "$conf"
+            fi
+    echo '      mandatory: true' >> "$conf"
+    echo '' >> "$conf"
+    if [ ! ${#disable_systemd[@]} -eq 0 ]; then
+        [ ! $(grep "disable:" ${check} | wc -l) -eq 0 ] && echo 'disable:' >> "$conf"
+        for s in ${disable_systemd[@]}; do
+            if [ ! $(grep "services:" ${check} | wc -l) -eq 0 ]; then
+                echo "    - name: $s" >> "$conf"
+            else
+                echo "    - name: $s.service"  >> "$conf"
+                echo '      action: "disable"' >> "$conf"
+            fi
+            echo '      mandatory: false' >> "$conf"
+            echo '' >> "$conf"
+        done
+    fi
 }
 
 write_displaymanager_conf(){
-    local conf="${modules_dir}/displaymanager.conf"
+    local conf="${etc_config_dir}/displaymanager.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "displaymanagers:" >> "$conf"
@@ -93,24 +144,23 @@ write_displaymanager_conf(){
     echo "  - slim" >> "$conf"
     echo '' >> "$conf"
     echo "basicSetup: false" >> "$conf"
+    echo "sddm:" >> "$conf"
+    if [[ -e "$1/etc/sddm.conf.d/kde_settings.conf" ]]; then
+        echo '  configuration_file: "/etc/sddm.conf.d/kde_settings.conf"' >> "$conf"
+    else
+        echo '  configuration_file: "/etc/sddm.conf"' >> "$conf"
+    fi
 }
 
 write_initcpio_conf(){
-    local conf="${modules_dir}/initcpio.conf"
+    local conf="${etc_config_dir}/initcpio.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "kernel: ${kernel}" >> "$conf"
 }
 
-write_dracut_conf(){
-    local conf="${modules_dir}/dracut.conf"
-    msg2 "Writing %s ..." "${conf##*/}"
-    echo "---" > "$conf"
-    echo "initramfsName: /boot/initramfs-${kernel}.img" >> "$conf"
-}
-
 write_unpack_conf(){
-    local conf="${modules_dir}/unpackfs.conf"
+    local conf="${etc_config_dir}/unpackfs.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "unpack:" >> "$conf"
@@ -125,7 +175,7 @@ write_unpack_conf(){
 }
 
 write_users_conf(){
-    local conf="${modules_dir}/users.conf"
+    local conf="${etc_config_dir}/users.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "defaultGroups:" >> "$conf"
@@ -136,20 +186,45 @@ write_users_conf(){
     unset IFS
     echo "autologinGroup:  autologin" >> "$conf"
     echo "doAutologin:     false" >> "$conf" # can be either 'true' or 'false'
+    echo "displayAutologin:   true" >> "$conf" # can be either 'true' or 'false'
     echo "sudoersGroup:    wheel" >> "$conf"
+    echo "passwordRequirements:" >> "$conf"
+    echo "    nonempty: true" >> "$conf" # can be either 'true' or 'false'
     echo "setRootPassword: true" >> "$conf" # must be true, else some options get hidden
-    echo "doReusePassword: true" >> "$conf" # only used in old 'users' module
+    echo "doReusePassword: false" >> "$conf" # only used in old 'users' module
     echo "availableShells: /bin/bash, /bin/zsh" >> "$conf" # only used in new 'users' module
     echo "avatarFilePath:  ~/.face" >> "$conf" # mostly used file-name for avatar
     if [[ -n "$user_shell" ]]; then
         echo "userShell:       $user_shell" >> "$conf"
-    fi
-    echo "passwordRequirements:
-    nonempty: true" >> "$conf" # make sure the user doesn't enter an empty password
+        # Support 3.3.x
+        echo "user:" >> "$conf"
+        echo "  shell: $user_shell" >> "$conf"
+        echo "  forbidden_names: [ root ]" >> "$conf"
+        echo '  home_permissions: "o700"' >> "$conf"
+    fi   
+}
+
+write_partition_conf(){
+    local conf="${etc_config_dir}/partition.conf"
+    msg2 "Writing %s ..." "${conf##*/}"
+    echo "---" > "$conf"
+    echo "efiSystemPartition:     \"/boot/efi\"" >> "$conf"
+    echo "userSwapChoices:" >> "$conf"
+    echo "    - none      # Create no swap, use no swap" >> "$conf"
+    echo "    - small     # Up to 4GB" >> "$conf"
+    echo "    - suspend   # At least main memory size" >> "$conf"
+    echo "    - file      # To swap file instead of partition" >> "$conf"
+    echo "alwaysShowPartitionLabels: true" >> "$conf"
+    echo "# There are four options: erase, replace, alongside, manual)," >> "$conf"
+    echo "# the default is \"none\"." >> "$conf"
+    echo "initialPartitioningChoice: erase" >> "$conf"
+    echo "initialSwapChoice: none" >> "$conf"
+    echo "defaultFileSystemType:  \"btrfs\"" >> "$conf"
+    echo "availableFileSystemTypes:  [\"btrfs\",\"ext4\",\"f2fs\",\"xfs\"]" >> "$conf"
 }
 
 write_packages_conf(){
-    local conf="${modules_dir}/packages.conf"
+    local conf="${etc_config_dir}/packages.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "backend: pacman" >> "$conf"
@@ -164,7 +239,7 @@ write_packages_conf(){
 }
 
 write_welcome_conf(){
-    local conf="${modules_dir}/welcome.conf"
+    local conf="${etc_config_dir}/welcome.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf" >> "$conf"
     echo "showSupportUrl:         true" >> "$conf"
@@ -172,16 +247,15 @@ write_welcome_conf(){
     echo "showReleaseNotesUrl:    true" >> "$conf"
     echo '' >> "$conf"
     echo "requirements:" >> "$conf"
-    echo "    requiredStorage:    29.9" >> "$conf"
-    echo "    requiredRam:        2.5" >> "$conf"
-    echo "    internetCheckUrl:   https://archlinux.org" >> "$conf"
+    echo "    requiredStorage:    7.9" >> "$conf"
+    echo "    requiredRam:        1.0" >> "$conf"
+    echo "    internetCheckUrl:   https://manjaro.org" >> "$conf"
     echo "    check:" >> "$conf"
     echo "      - storage" >> "$conf"
     echo "      - ram" >> "$conf"
     echo "      - power" >> "$conf"
     echo "      - internet" >> "$conf"
     echo "      - root" >> "$conf"
-    echo "      - efi" >> "$conf"
     echo "    required:" >> "$conf"
     echo "      - storage" >> "$conf"
     echo "      - ram" >> "$conf"
@@ -198,9 +272,21 @@ write_welcome_conf(){
 }
 
 write_mhwdcfg_conf(){
-    local conf="${modules_dir}/ghtcfg.conf"
+    local conf="${etc_config_dir}/mhwdcfg.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
+    echo "bus:" >> "$conf"
+    echo "    - pci" >> "$conf"
+    echo '' >> "$conf"
+    echo "identifier:" >> "$conf"
+    echo "    net:" >> "$conf"
+    echo "      - 200" >> "$conf"
+    echo "      - 280" >> "$conf"
+    echo "    video:" >> "$conf"
+    echo "      - 300" >> "$conf"
+    echo "      - 302" >> "$conf"
+    echo "      - 380" >> "$conf"
+    echo '' >> "$conf"
     local drv="free"
     ${nonfree_mhwd} && drv="nonfree"
     echo "driver: ${drv}" >> "$conf"
@@ -209,57 +295,48 @@ write_mhwdcfg_conf(){
     ${netinstall} && switch='false'
     echo "local: ${switch}" >> "$conf"
     echo '' >> "$conf"
-    echo 'repo: /opt/ght/pacman-ght.conf' >> "$conf"
+    echo 'repo: /opt/mhwd/pacman-mhwd.conf' >> "$conf"
 }
 
 write_postcfg_conf(){
-    local conf="${modules_dir}/postcfg.conf"
+    local conf="${etc_config_dir}/postcfg.conf"
+    msg2 "Writing %s ..." "${conf##*/}"
+    echo "---" > "$conf"
+    echo "keyrings:" >> "$conf"
+    echo "    - archlinux" >> "$conf"
+    echo "    - manjaro" >> "$conf"
     if [[ -n ${smb_workgroup} ]]; then
-        msg2 "Writing %s ..." "${conf##*/}"
-        echo "---" > "$conf"
+        echo "" >> "$conf"
         echo "samba:" >> "$conf"
         echo "    - workgroup:  ${smb_workgroup}" >> "$conf"
     fi
 }
 
-write_zfspartitioncfg_conf(){
-    local conf="${modules_dir}/partition.conf"
-    msg2 "Writing %s ..." "${conf##*/}"
-    echo 'defaultFileSystemType:  "zfs"' >> "$conf"
+get_yaml(){
+    local args=() yaml
+    if ${chrootcfg}; then
+        args+=("${profile}/chrootcfg")
+    else
+        args+=("${profile}/packages")
+    fi
+    args+=("systemd")
+    for arg in ${args[@]}; do
+        yaml=${yaml:-}${yaml:+-}${arg}
+    done
+    echo "${yaml}.yaml"
 }
 
-#get_yaml(){
-#    local args=() yaml
-#    if ${chrootcfg}; then
-#        args+=("${profile}/chrootcfg")
-#    else
-#        args+=("${profile}/packages")
-#   fi
-#    args+=("systemd")
-#    for arg in ${args[@]}; do
-#        yaml=${yaml:-}${yaml:+-}${arg}
-#    done
-#    echo "${yaml}.yaml"
-#}
-
 write_netinstall_conf(){
-    local conf="${modules_dir}/netinstall.conf"
+    local conf="${etc_config_dir}/netinstall.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
-    echo "groupsUrl: ${netgroups}" >> "$conf"
+    echo "groupsUrl: ${netgroups}/$(get_yaml)" >> "$conf"
     echo "label:" >> "$conf"
     echo "    sidebar: \"${netinstall_label}\"" >> "$conf"
 }
 
-write_plymouthcfg_conf(){
-    local conf="${modules_dir}/plymouthcfg.conf"
-    msg2 "Writing %s ..." "${conf##*/}"
-    echo "---" > "$conf"
-    echo "plymouth_theme: ${plymouth_theme}" >> "$conf"
-}
-
 write_locale_conf(){
-    local conf="${modules_dir}/locale.conf"
+    local conf="${etc_config_dir}/locale.conf"
     msg2 "Writing %s ..." "${conf##*/}"
     echo "---" > "$conf"
     echo "localeGenPath: /etc/locale.gen" >> "$conf"
@@ -272,77 +349,6 @@ write_locale_conf(){
         echo "region: America" >> "$conf"
         echo "zone: New_York" >> "$conf"
     fi
-}
-
-write_partition_conf(){
-    local conf="${modules_dir}/partition.conf"
-    msg2 "Writing %s ..." "${conf##*/}"
-    echo "---" > "$conf"
-    echo 'efiSystemPartition: "/boot/efi"' >> "$conf"
-    echo 'drawNestedPartitions: false' >> "$conf"
-    echo 'alwaysShowPartitionLabels: true' >> "$conf"
-    echo "efi:" >> "$conf"
-    echo "    minimumSize: 260MiB" >> "$conf"
-    echo "userSwapChoices:" >> "$conf"
-    echo "    - none" >> "$conf"
-    echo "    - suspend" >> "$conf"
-    echo "defaultFileSystemType: btrfs" >> "$conf"
-    echo "directoryFilesystemRestrictions:" >> "$conf"
-    echo '    - directory: "/"' >> "$conf"
-    echo '      allowedFilesystemTypes: ["btrfs"]' >> "$conf"
-    echo '    - directory: "efi"' >> "$conf"
-    echo '      allowedFilesystemTypes: ["fat32"]' >> "$conf"
-    echo '      onlyWhenMountpoint: true' >> "$conf"
-}
-
-write_mount_conf(){
-    local conf="${modules_dir}/mount.conf"
-    msg2 "Writing %s ..." "${conf##*/}"
-    echo "---" > "$conf"
-    echo "btrfsSubvolumes:" >> "$conf"
-    echo "    - mountPoint: /" >> "$conf"
-    echo "      subvolume: /@" >> "$conf"
-    echo "    - mountPoint: /home" >> "$conf"
-    echo "      subvolume: /@home" >> "$conf"
-    echo "    - mountPoint: /root" >> "$conf"
-    echo "      subvolume: /@root" >> "$conf"
-    echo "    - mountPoint: /srv" >> "$conf"
-    echo "      subvolume: /@srv" >> "$conf"
-    echo "    - mountPoint: /var/cache" >> "$conf"
-    echo "      subvolume: /@cache" >> "$conf"
-    echo "    - mountPoint: /var/log" >> "$conf"
-    echo "      subvolume: /@log" >> "$conf"
-    echo "    - mountPoint: /var/tmp" >> "$conf"
-    echo "      subvolume: /@tmp" >> "$conf"
-    echo "mountOptions:" >> "$conf"
-    echo "    - filesystem: default" >> "$conf"
-    echo "      options: [ defaults ]" >> "$conf"
-    echo "    - filesystem: efi" >> "$conf"
-    echo "      options: [ defaults, umask=0077 ]" >> "$conf"
-    echo "    - filesystem: btrfs" >> "$conf"
-    echo "      options: [ defaults, noatime, compress=zstd ]" >> "$conf"
-    echo "    - filesystem: btrfs_swap" >> "$conf"
-    echo "      options: [ defaults, noatime ]" >> "$conf"
-    echo "extraMounts:" >> "$conf"
-    echo "    - device: proc" >> "$conf"
-    echo "      fs: proc" >> "$conf"
-    echo "      mountPoint: /proc" >> "$conf"
-    echo "    - device: sys" >> "$conf"
-    echo "      fs: sysfs" >> "$conf"
-    echo "      mountPoint: /sys" >> "$conf"
-    echo "    - device: /dev" >> "$conf"
-    echo "      mountPoint: /dev" >> "$conf"
-    echo "      options: [ bind ]" >> "$conf"
-    echo "    - device: tmpfs" >> "$conf"
-    echo "      fs: tmpfs" >> "$conf"
-    echo "      mountPoint: /run" >> "$conf"
-    echo "    - device: /run/udev" >> "$conf"
-    echo "      mountPoint: /run/udev" >> "$conf"
-    echo "      options: [ bind ]" >> "$conf"
-    echo "    - device: efivarfs" >> "$conf"
-    echo "      fs: efivarfs" >> "$conf"
-    echo "      mountPoint: /sys/firmware/efi/efivars" >> "$conf"
-    echo "      efi: true" >> "$conf"
 }
 
 write_settings_conf(){
@@ -366,27 +372,22 @@ write_settings_conf(){
     else
         echo "        - users" >> "$conf" && write_users_conf
     fi
+    
     # WIP - OfficeChooser
-    if ${extra}; then
-#        if ${oem_used}; then
-            msg2 "Skipping enabling PackageChooser module."
-#        else
-#            msg2 "Enabling PackageChooser module."
-#            echo "        - packagechooser" >> "$conf"
-#        fi
+    if ${oem_used} || ! ${office_installer}; then
+        msg2 "Skipping enabling PackageChooser module."
+    else
+        msg2 "Enabling PackageChooser module."
+        echo "        - packagechooser" >> "$conf"
     fi
+
     if ${netinstall}; then
         echo "        - netinstall" >> "$conf" && write_netinstall_conf
     fi
     echo "        - summary" >> "$conf"
     echo "    - exec:" >> "$conf"
     echo "        - partition" >> "$conf"
-    if ${zfs_used}; then
-        echo "        - zfs" >> "$conf" && write_zfspartitioncfg_conf
-    else
-        msg2 "Skipping to set zfs module."
-    fi
-    echo "        - mount" >> "$conf" && write_mount_conf
+    echo "        - mount" >> "$conf"
     if ${netinstall}; then
         if ${chrootcfg}; then
             echo "        - chrootcfg" >> "$conf"
@@ -409,31 +410,34 @@ write_settings_conf(){
         echo "        - localecfg" >> "$conf"
     fi
     echo "        - luksbootkeyfile" >> "$conf"
+    echo "        - luksopenswaphookcfg" >> "$conf"
     echo "        - fstab" >> "$conf"
-    echo "        - plymouthcfg" >> "$conf" && write_plymouthcfg_conf
+    echo "        - initcpiocfg" >> "$conf"
+    echo "        - initcpio" >> "$conf" && write_initcpio_conf
     if ${oem_used}; then
         msg2 "Skipping to set users module."
+        if ${set_oem_user}; then
+            msg2 "Setup OEM user."
+            echo "        - oemuser" >> "$conf"
+        fi
     else
         echo "        - users" >> "$conf"
     fi
-    echo "        - displaymanager" >> "$conf" && write_displaymanager_conf
+    echo "        - displaymanager" >> "$conf" && write_displaymanager_conf "$1"
     if ${mhwd_used}; then
-        echo "        - ghtcfg" >> "$conf" && write_mhwdcfg_conf
+        echo "        - mhwdcfg" >> "$conf" && write_mhwdcfg_conf
     else
         msg2 "Skipping to set mhwdcfg module."
     fi
     echo "        - hwclock" >> "$conf"
-    echo "        - services-systemd" >> "$conf" && write_services_conf
-    if ${use_dracut}; then
-        echo "        - dracutlukscfg" >> "$conf"
-    else
-        echo "        - luksopenswaphookcfg" >> "$conf"
-        echo "        - initcpiocfg" >> "$conf"
-        echo "        - initcpio" >> "$conf" && write_initcpio_conf
-    fi
-    echo "        - postcfg" >> "$conf" && write_postcfg_conf
+    echo "        - services" >> "$conf" && write_services_conf
     echo "        - grubcfg" >> "$conf"
     echo "        - bootloader" >> "$conf" && write_bootloader_conf
+    if ${oem_used} && ! ${oem_use_postcfg}; then
+        msg2 "Skipping to set postcfg module."
+    else
+        echo "        - postcfg" >> "$conf" && write_postcfg_conf
+    fi
     echo "        - umount" >> "$conf"
     echo "    - show:" >> "$conf"
     echo "        - finished" >> "$conf" && write_finished_conf
@@ -460,8 +464,9 @@ write_settings_conf(){
 
 configure_calamares(){
     info "Configuring [Calamares]"
-    modules_dir=$1/etc/calamares/modules
-    prepare_dir "${modules_dir}"
+    etc_config_dir=$1/etc/calamares/modules
+    modules_dir=$1/usr/share/calamares/modules
+    prepare_dir "${etc_config_dir}"
     write_settings_conf "$1"
     info "Done configuring [Calamares]"
 }
@@ -541,9 +546,6 @@ make_profile_yaml(){
     write_netgroup_yaml "$1" "$(gen_fn "Packages-Root")"
     if [[ -f "${packages_desktop}" ]]; then
         load_pkgs "${packages_desktop}"
-        if [[ -f "${packages_desktop_common}" ]]; then
-            load_pkgs "${packages_desktop_common}" true
-        fi
         write_netgroup_yaml "$1" "$(gen_fn "Packages-Desktop")"
     fi
     ${calamares} && write_calamares_yaml "$1"

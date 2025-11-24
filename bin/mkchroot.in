@@ -91,10 +91,8 @@ fi
 
 # Workaround when creating a chroot in a branch different of the host
 if [[ -n $pac_conf ]] && [[ -n $mirrors_conf ]] && [[ -n ${build_mirror} ]]; then
-    url=${build_mirror}'/$repo/os/$arch'
-   [[ ${build_mirror} = *ftp*repo.archlinux.org* ]] && show_mirror=repo.archlinux.org'/$repo/$arch' || show_mirror=$url
-
-     # [[ ${build_mirror} = *ftp*repo.garuda.org* ]] && show_mirror=repo.garuda.org'/$repo/$arch' || show_mirror=$url
+    url=${build_mirror}'/$repo/$arch'
+    [[ ${build_mirror} = *ftp*repo.manjaro.org* ]] && show_mirror=repo.manjaro.org'/$repo/$arch' || show_mirror=$url
     info "mirror: %s" "$show_mirror"
     pac_base="$working_dir/pacman-basestrap.conf"
     sed "s#Include = /etc/pacman.d/mirrorlist#Server = ${url}#g" $pac_conf > $pac_base
@@ -108,7 +106,7 @@ else
     "${cache_dirs[@]/#/--cachedir=}" "$@" || die 'Failed to install all packages'
 fi
 
-echo "$version" > "$working_dir/.arch-tools"
+echo "$version" > "$working_dir/.manjaro-tools"
 
 if ${build_locales}; then
     info "Using build locales ..."
@@ -117,11 +115,12 @@ if ${build_locales}; then
     printf '%s.UTF-8 UTF-8\n' en_US > "$working_dir/etc/locale.gen"
     printf 'LANG=%s.UTF-8\n' en_US > "$working_dir/etc/locale.conf"
     printf 'LC_MESSAGES=C\n' >> "$working_dir/etc/locale.conf"
+
+    chroot_args=(${pac_conf:+-C "$pac_conf"} ${makepkg_conf:+-M "$makepkg_conf"} \
+                 ${mirrors_conf:+-S "$mirrors_conf"} ${build_mirror:+-B "$build_mirror"} \
+                 ${cache_dir:+-c "$cache_dir"} ${keep_flag})
+
+    exec chroot-run \
+        ${chroot_args[*]} \
+        "$working_dir" locale-gen
 fi
-
-chroot_args=(${pac_conf:+-C "$pac_conf"} ${makepkg_conf:+-M "$makepkg_conf"} ${mirrors_conf:+-S "$mirrors_conf"} ${build_mirror:+-B "$build_mirror"} ${cache_dir:+-c "$cache_dir"} ${keep_flag})
-
-exec chroot-run \
-    ${chroot_args[*]} \
-    "$working_dir" locale-gen
-

@@ -139,16 +139,16 @@ make_sfs() {
 
     local highcomp
 
-    [[ "${iso_compression}" == "xz" ]] && highcomp="-b 1M -Xdict-size 1M -Xbcj x86"
+    [[ "${iso_compression}" == "xz" ]] && highcomp="-b 256K -Xbcj x86"
     
-    [[ "${iso_compression}" == "zstd" ]] && highcomp="-b 1M -Xcompression-level 22" #compression level max 22 (default 15)
+    [[ "${iso_compression}" == "zstd" ]] && highcomp="-b 256K -Xcompression-level 20" #compression level max 22 (default 15)
 
     mksfs_args+=(-comp ${iso_compression} ${highcomp})
 
     if ${verbose}; then
-        mksquashfs "${mksfs_args[@]}" 
-    else
         mksquashfs "${mksfs_args[@]}" >/dev/null
+    else
+        mksquashfs "${mksfs_args[@]}"
     fi
     make_checksum "${dest}" "${name}"
     ${persist} && rm "${src}.img"
@@ -172,7 +172,7 @@ assemble_iso(){
         -volid "${iso_label}" \
         -appid "${iso_app_id}" \
         -publisher "${iso_publisher}" \
-        -preparer "Prepared by arch-tools/${0##*/}" \
+        -preparer "Prepared by manjaro-tools/${0##*/}" \
         -r -graft-points -no-pad \
         --sort-weight 0 / \
         --sort-weight 1 /boot \
@@ -216,59 +216,20 @@ make_iso() {
         [[ -f "${iso_dir}/${iso_file}.sha1" ]] && rm -f "${iso_dir}/${iso_file}.sha1"
         [[ -f "${iso_dir}/${iso_file}.sha256" ]] && rm -f "${iso_dir}/${iso_file}.sha256"
         [[ -f "${iso_dir}/${iso_file}.torrent" ]] && rm -f "${iso_dir}/${iso_file}.torrent"
-        [[ -f "${iso_dir}/${iso_file}.zsync" ]] && rm -f "${iso_dir}/${iso_file}.zsync"
     fi
     assemble_iso
 
     ${permalink} && gen_permalink
-    ${torrent} && make_torrent
-    ${zsync} && make_zsync
-    ${checksum} && checksumiso "${iso_dir}"
-
-    if [ -e "/var/cache/arch-tools/arch-builds/.env" ]; then
-        source /var/cache/arch-tools/arch-builds/.env
-    fi
-    if [ ! -z "$TELEGRAM" ]; then
-        echo "${iso_file} built successfully!" | apprise -vv "${TELEGRAM}" -t "New ISO build available!"
-    fi
 
     msg "Done [Build ISO]"
 }
 
-make_torrent(){
-    find ${iso_dir} -type f -name "*.torrent" -delete
-    if [[ -f "${iso_dir}/${iso_file}" ]]; then
-        mirror_path="${edition}/${profile}/${dist_timestamp}/${iso_file}"
-        local seed="https://downloads.sourceforge.net/project/arch-linux/${mirror_path}"
-        local tracker_url1=udp://tracker.opentrackr.org:1337/announce
-        local tracker_url2=udp://tracker.openbittorrent.com:80/announce
-        local tracker_url3=http://fosstorrents.com:6969/announce
-        local tracker_url4=udp://tracker.leechers-paradise.org:6969/announce
-        mktorrent_args=(-c "${torrent_meta}" -l ${piece_size} -a ${tracker_url1} -a ${tracker_url2} -a ${tracker_url3} -a ${tracker_url4} -w ${seed}) 
-        ${verbose} && mktorrent_args+=(-v)
-        msg2 "Creating (%s) ..." "${iso##*/}.torrent"
-        mktorrent ${mktorrent_args[*]} -o "${iso_dir}/${iso_file}.torrent" "${iso_dir}/${iso_file}"
-    fi
-}
-
-make_zsync(){
-    find ${iso_dir} -type f -name "*.zsync" -delete
-
-    if [[ -n $(find ${iso_dir} -type f -name "*.iso") ]]; then
-        isos=$(ls ${iso_dir}/*.iso)
-        for iso in ${isos}; do
-            msg2 "Creating (%s) ..." "${iso##*/}.zsync"
-            zsyncmake ${iso} -u "${iso##*/}" -o ${iso}.zsync
-        done
-    fi
-}
-
 gen_permalink(){
-    if [[ ${edition} == "community" ]] || [[ ${edition} == "arch" ]]; then
+    if [[ ${edition} == "community" ]] || [[ ${edition} == "manjaro" ]]; then
         if [[ -f "${iso_dir}/${iso_file}" ]]; then
             msg2 "Creating download link ..."
-            direct_url="https://sourceforge.net/projects/arch-linux/files/${iso_file}"
-            [[ ${edition} == "community" ]] && direct_url="https://sourceforge.net/projects/arch-linux/files/${iso_file}"
+            direct_url="https://osdn.net/dl/${edition}/${iso_file}"
+            [[ ${edition} == "community" ]] && direct_url="https://osdn.net/dl/manjaro-${edition}/${iso_file}"
             ## html permalink
             html_doc="<!DOCTYPE HTML>"
             html_doc+="<meta charset=\"UTF-8\">"
@@ -299,14 +260,15 @@ gen_iso_fn(){
     if ! ${chrootcfg}; then
         [[ -n ${profile} ]] && vars+=("${profile}")
     fi
+    vars+=("${dist_release}")
 
-    [[ ! ${target_branch} == "archlinux" ]] && vars+=("${target_branch}")
-    
-   ## [[ ${extra} == 'true' ]] && vars+=("ultimate")
+    [[ ! ${target_branch} == "stable" ]] && vars+=("${target_branch}")
+
+    [[ ${extra} == 'false' ]] && vars+=("minimal")
+
+    vars+=("$(date +%y%m%d)")
 
     vars+=("${kernel}")
-    
-    vars+=("${dist_timestamp}")
 
     [[ ${target_arch} == "i686" ]] && vars+=("${target_arch}")
     for n in ${vars[@]}; do
@@ -318,7 +280,8 @@ gen_iso_fn(){
 
 reset_pac_conf(){
     info "Restoring [%s/etc/pacman.conf] ..." "$1"
-    sed -e "s|^.*#CheckSpace|CheckSpace|" \
+    sed -e 's|^.*HoldPkg.*|HoldPkg      = pacman glibc manjaro-system|' \
+        -e "s|^.*#CheckSpace|CheckSpace|" \
         -i "$1/etc/pacman.conf"
 }
 
@@ -360,19 +323,21 @@ make_image_root() {
         msg "Prepare [Base installation] (rootfs)"
         local path="${work_dir}/rootfs"
         mkdir -p ${path}
+        sync
 
         chroot_create "${path}" "${packages}" || die
 
-        echo -e "TIMESTAMP=${dist_timestamp}\nCODENAME=${dist_codename}" >> "${path}/usr/lib/arch/arch-release"
-
-        # /build/grub needs to exist if grub is in use, otherwise grub-mkconfig will fail on calamares in BIOS mode
-        if [[ "${efi_boot_loader}" == "grub" ]]; then
-            mkdir -p "${path}/boot/grub"
+        # profide multilib usage to mhwd-script
+        if [[ ! -z ${multilib} ]]; then
+            echo 'MHWD64_IS_LIB32="'${multilib}'"' > "${path}/etc/mhwd-x86_64.conf"
         fi
 
+        pacman -Qr "${path}" > "${path}/rootfs-pkgs.txt"
         copy_overlay "${profile_dir}/root-overlay" "${path}"
 
         reset_pac_conf "${path}"
+
+        configure_lsb "${path}"
 
         clean_up_image "${path}"
         : > ${work_dir}/build.${FUNCNAME}
@@ -385,26 +350,30 @@ make_image_desktop() {
         msg "Prepare [Desktop installation] (desktopfs)"
         local path="${work_dir}/desktopfs"
         mkdir -p ${path}
+        sync
 
         mount_fs_root "${path}"
 
         chroot_create "${path}" "${packages}"
 
-        pacman -Qr "${path}" > ${iso_dir}/$(gen_iso_fn).pkgs.txt
-        [[ -e ${profile_dir}/desktop-overlay-common ]] && copy_overlay "${profile_dir}/desktop-overlay-common" "${path}"
+        pacman -Qr "${path}" > "${path}/desktopfs-pkgs.txt"
+        cp "${path}/desktopfs-pkgs.txt" ${iso_dir}/$(gen_iso_fn)-pkgs.txt
         [[ -e ${profile_dir}/desktop-overlay ]] && copy_overlay "${profile_dir}/desktop-overlay" "${path}"
 
-        if [[ -e "${path}/usr/share/calamares/branding/arch/branding.desc" ]]; then
+        if [[ -e "${path}/usr/share/calamares/branding/manjaro/calamares-sidebar.qml" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
+        elif [[ -e "${path}/usr/share/calamares/branding/manjaro/show.qml" ]]; then
+            configure_branding_old "${path}"
+            msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi
-        
+
         reset_pac_conf "${path}"
 
         seed_snaps ${path}
-
+        
         echo "Enable os-prober"
-        sed -i -r 's,^(#|)GRUB_DISABLE_OS_PROBER=.*,GRUB_DISABLE_OS_PROBER=false,' "${path}/etc/default/grub"
+        sed -i -e 's,.*GRUB_DISABLE_OS_PROBER=.*,GRUB_DISABLE_OS_PROBER=false,' "${path}/etc/default/grub"
 
         umount_fs
         clean_up_image "${path}"
@@ -426,20 +395,31 @@ make_image_live() {
         msg "Prepare [Live installation] (livefs)"
         local path="${work_dir}/livefs"
         mkdir -p ${path}
+        sync
 
         mount_fs_select "${path}"
 
         chroot_create "${path}" "${packages}"
 
-        [[ -e ${profile_dir}/live-overlay-common ]] && copy_overlay "${profile_dir}/live-overlay-common" "${path}"
-        [[ -e ${profile_dir}/live-overlay ]] && copy_overlay "${profile_dir}/live-overlay" "${path}"
+        pacman -Qr "${path}" > "${path}/livefs-pkgs.txt"
+        copy_overlay "${profile_dir}/live-overlay" "${path}"
         configure_live_image "${path}"
 
-        if [[ -e "${path}/usr/share/calamares/branding/arch/branding.desc" ]]; then
+	# mask some systemd targets on live-session
+	mkdir -p "${path}"/etc/systemd/system
+	ln -sfv /dev/null "${path}"/etc/systemd/system/sleep.target
+	ln -sfv /dev/null "${path}"/etc/systemd/system/suspend.target
+	ln -sfv /dev/null "${path}"/etc/systemd/system/hibernate.target
+	ln -sfv /dev/null "${path}"/etc/systemd/system/hybrid-sleep.target
+
+        if [[ -e "${path}/usr/share/calamares/branding/manjaro/calamares-sidebar.qml" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
+        elif [[ -e "${path}/usr/share/calamares/branding/manjaro/show.qml" ]]; then
+            configure_branding_old "${path}"
+            msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi
-
+        
         configure_polkit_user_rules "${path}"
 
         reset_pac_conf "${path}"
@@ -454,9 +434,10 @@ make_image_live() {
 
 make_image_mhwd() {
     if [[ ! -e ${work_dir}/build.${FUNCNAME} ]]; then
-        msg "Prepare [drivers repository] (ghtfs)"
-        local path="${work_dir}/ghtfs"
+        msg "Prepare [drivers repository] (mhwdfs)"
+        local path="${work_dir}/mhwdfs"
         mkdir -p ${path}${mhwd_repo}
+        sync
 
         mount_fs_select "${path}"
 
@@ -469,13 +450,14 @@ make_image_mhwd() {
                 rm ${path}${mhwd_repo}/${mhwd_clean}
             done
         fi
-        cp ${DATADIR}/pacman-ght.conf ${path}/opt/ght
+        cp ${DATADIR}/pacman-mhwd.conf ${path}/opt/mhwd
         make_repo "${path}"
+        configure_mhwd_drivers "${path}"
 
         umount_fs
         clean_up_image "${path}"
         : > ${work_dir}/build.${FUNCNAME}
-        msg "Done [drivers repository] (ghtfs)"
+        msg "Done [drivers repository] (mhwdfs)"
     fi
 }
 
@@ -485,6 +467,7 @@ make_image_boot() {
         local boot="${iso_root}/boot"
 
         mkdir -p ${boot}
+        sync
 
         cp ${work_dir}/rootfs/boot/vmlinuz* ${boot}/vmlinuz-${target_arch}
 
@@ -497,11 +480,11 @@ make_image_boot() {
             mount_fs_net "${path}"
         fi
 
-        prepare_boot_extras "${path}" "${boot}"
         prepare_initcpio "${path}"
         prepare_initramfs "${path}"
 
         cp ${path}/boot/initramfs.img ${boot}/initramfs-${target_arch}.img
+        prepare_boot_extras "${path}" "${boot}"
 
         umount_fs
 
@@ -512,12 +495,8 @@ make_image_boot() {
 }
 
 configure_grub(){
-    local boot_args=('quiet' 'systemd.show_status=1' 'checksum=y' ${custom_boot_args} ${apparmor_boot_args})
-    if ${use_dracut}; then
-        local default_args="misobasedir=${iso_name} root=miso:LABEL=${iso_label}"
-    else
-        local default_args="misobasedir=${iso_name} misolabel=${iso_label}"
-    fi
+    local default_args="misobasedir=${iso_name} misolabel=${iso_label}" \
+        boot_args=('quiet' 'systemd.show_status=1' ${custom_boot_args} ${apparmor_boot_args})
 
     sed -e "s|@DIST_NAME@|${dist_name}|g" \
         -e "s|@ARCH@|${target_arch}|g" \
@@ -560,7 +539,7 @@ check_requirements(){
     fi
 
     local iso_kernel=${kernel:5:1}
-#    [[ ${iso_kernel} < "4" ]] && die "ISO kernel must be version>=4.0!"
+    [[ ${iso_kernel} < "4" ]] && die "ISO kernel must be version>=4.0!"
 }
 
 compress_images(){
@@ -576,9 +555,6 @@ prepare_images(){
     run_safe "make_image_root"
     if [[ -f "${packages_desktop}" ]] ; then
         load_pkgs "${packages_desktop}"
-        if [[ -f "${packages_desktop_common}" ]] ; then
-            load_pkgs "${packages_desktop_common}" true
-        fi
         run_safe "make_image_desktop"
     fi
     if [[ -f ${profile_dir}/Packages-Live ]]; then
@@ -668,12 +644,13 @@ load_profile(){
 
     iso_file=$(gen_iso_fn).iso
 
-    iso_label=$(get_iso_label "${dist_branding}_${profile}_${dist_codename//.}")
+    [[ ${extra} == 'false' ]] && _edition=("m")
+    iso_label=$(get_iso_label "${dist_branding}_${profile}${_edition}_${dist_release//.}")
 
     mkchroot_args+=(-C ${pacman_conf} -S ${mirrors_conf} -B "${build_mirror}/${target_branch}" -K)
     work_dir=${chroots_iso}/${profile}/${target_arch}
 
-    iso_dir="${cache_dir_iso}/${edition}/${profile}/${dist_timestamp}"
+    iso_dir="${cache_dir_iso}/${edition}/${profile}/${dist_release}"
 
     iso_root=${chroots_iso}/${profile}/iso
     mnt_dir=${chroots_iso}/${profile}/mnt

@@ -161,9 +161,9 @@ _find_dev_by_path () {
 run_hook() {
     [[ -z "${arch}" ]] && arch="$(uname -m)"
     [[ -z "${copytoram_size}" ]] && copytoram_size="75%"
-    [[ -z "${misobasedir}" ]] && misobasedir="arch"
+    [[ -z "${misobasedir}" ]] && misobasedir="manjaro"
 
-    [[ -z "${dm_snap_prefix}" ]] && dm_snap_prefix="arch"
+    [[ -z "${dm_snap_prefix}" ]] && dm_snap_prefix="manjaro"
     misodevice=$(_find_dev_by_path /.miso)
     [[ -z "${misodevice}" ]] && misodevice="/dev/disk/by-label/${misolabel}"
     [[ -z "${cow_spacesize}" ]] && cow_spacesize="256M"
@@ -200,7 +200,7 @@ miso_mount_handler() {
     fi
 
     if [[ "${checksum}" == "y" ]]; then
-        for fs in rootfs desktopfs ghtfs livefs; do
+        for fs in rootfs desktopfs mhwdfs livefs; do
             if [[ -f "/run/miso/bootmnt/${misobasedir}/${arch}/${fs}.sfs" ]]; then
                 if [[ -f "/run/miso/bootmnt/${misobasedir}/${arch}/${fs}.md5" ]]; then
                     msg -n ":: Self-test requested, please wait..."
@@ -220,7 +220,7 @@ miso_mount_handler() {
     fi
 
     if [[ "${verify}" == "y" ]]; then
-        for fs in rootfs desktopfs ghtfs livefs; do
+        for fs in rootfs desktopfs mhwdfs livefs; do
             if [[ -f "/run/miso/bootmnt/${misobasedir}/${arch}/${fs}.sfs" ]]; then
                 if [[ -f "/run/miso/bootmnt/${misobasedir}/${arch}/${fs}.sfs.sig" ]]; then
                     msg -n ":: Signature verification requested, please wait..."
@@ -263,7 +263,7 @@ miso_mount_handler() {
     local dest_sfs="/run/miso/sfs" dest_img="/run/miso/img"
     local lower_dir
 
-    for sfs in livefs ghtfs desktopfs rootfs; do
+    for sfs in livefs mhwdfs desktopfs rootfs; do
         if [[ -f "${src}/${sfs}.sfs" ]]; then
             _mnt_sfs "${src}/${sfs}.sfs" "${dest_sfs}/${sfs}"
             if [[ -f "${dest_sfs}/${sfs}/${sfs}.img" ]]; then

@@ -97,7 +97,7 @@ else
     sed -i "s/UUID/$UUID/g" ~/VirtualBox\ VMs/Manjaro/Manjaro.vbox
     sed -i "s/gui_lang/$gui_lang/g" ~/VirtualBox\ VMs/Manjaro/Manjaro.vbox
     
-    VBoxManage registervm ~/VirtualBox\ VMs/Manjaro/Manjaro.vbox #register the manjaro vbox machine
+    VBoxManage registervm ~/VirtualBox\ VMs/Manjaro/Manjaro.vbox #register the arch vbox machine
 fi
 
 
@@ -106,7 +106,7 @@ sleep 1
 
 load_user_info
 
-load_config "${USERCONFDIR}/manjaro-tools.conf" || load_config "${SYSCONFDIR}/manjaro-tools.conf"
+load_config "${USERCONFDIR}/arch-tools.conf" || load_config "${SYSCONFDIR}/arch-tools.conf"
 
 run_dir=${cache_dir_iso}
 dist_number=${dist_release}
@@ -121,7 +121,7 @@ else msg "No ISO to load present"
      exit 1
 fi
 
-VBoxManage storageattach Manjaro --storagectl IDE --port 1 --device 0  --type dvddrive --medium $iso_name #attach dvd manjaro iso
+VBoxManage storageattach Manjaro --storagectl IDE --port 1 --device 0  --type dvddrive --medium $iso_name #attach dvd arch iso
 
 sleep 1
 

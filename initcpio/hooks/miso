@@ -161,9 +161,9 @@ _find_dev_by_path () {
 run_hook() {
     [[ -z "${arch}" ]] && arch="$(uname -m)"
     [[ -z "${copytoram_size}" ]] && copytoram_size="75%"
-    [[ -z "${misobasedir}" ]] && misobasedir="manjaro"
+    [[ -z "${misobasedir}" ]] && misobasedir="arch"
 
-    [[ -z "${dm_snap_prefix}" ]] && dm_snap_prefix="manjaro"
+    [[ -z "${dm_snap_prefix}" ]] && dm_snap_prefix="arch"
     misodevice=$(_find_dev_by_path /.miso)
     [[ -z "${misodevice}" ]] && misodevice="/dev/disk/by-label/${misolabel}"
     [[ -z "${cow_spacesize}" ]] && cow_spacesize="256M"

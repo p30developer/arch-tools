@@ -65,17 +65,17 @@
 ################# live-session #################
 
 # unset defaults to given value
-# hostname="manjaro"
+# hostname="arch"
 
 # unset defaults to given value
-# username="manjaro"
+# username="arch"
 
 # unset defaults to given value
-# password="manjaro"
+# password="arch"
 
 # unset defaults to given values
 # names must match systemd service names
 # services in enable_systemd array don't need to be listed here
-# enable_systemd_live=('manjaro-live' 'mhwd-live' 'pacman-init' 'mirrors-live')
+# enable_systemd_live=('arch-live' 'mhwd-live' 'pacman-init' 'mirrors-live')
 
 # disable_systemd_live=()

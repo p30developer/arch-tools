@@ -36,7 +36,7 @@ display_settings(){
 
 load_user_info
 
-load_config "${USERCONFDIR}/manjaro-tools.conf" || load_config "${SYSCONFDIR}/manjaro-tools.conf"
+load_config "${USERCONFDIR}/arch-tools.conf" || load_config "${SYSCONFDIR}/arch-tools.conf"
 
 #sync=false
 pretend=false
@@ -45,7 +45,7 @@ clean=false
 
 usage() {
     echo "Usage: ${0##*/} [options]"
-   #echo "    -s            Sync manjaro tree"
+   #echo "    -s            Sync arch tree"
     echo "    -a            Sync arch abs"
     echo '    -c            Clean package tree'
     echo '    -q            Query settings'

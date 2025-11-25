@@ -172,7 +172,7 @@ assemble_iso(){
         -volid "${iso_label}" \
         -appid "${iso_app_id}" \
         -publisher "${iso_publisher}" \
-        -preparer "Prepared by manjaro-tools/${0##*/}" \
+        -preparer "Prepared by arch-tools/${0##*/}" \
         -r -graft-points -no-pad \
         --sort-weight 0 / \
         --sort-weight 1 /boot \
@@ -224,35 +224,75 @@ make_iso() {
     msg "Done [Build ISO]"
 }
 
+
 gen_permalink(){
-    if [[ ${edition} == "community" ]] || [[ ${edition} == "manjaro" ]]; then
+    # Only Arch Linux edition
+    if [[ ${edition} == "arch" ]]; then
         if [[ -f "${iso_dir}/${iso_file}" ]]; then
             msg2 "Creating download link ..."
-            direct_url="https://osdn.net/dl/${edition}/${iso_file}"
-            [[ ${edition} == "community" ]] && direct_url="https://osdn.net/dl/manjaro-${edition}/${iso_file}"
-            ## html permalink
+
+            # Official Arch Linux ISO download URL
+            direct_url="https://geo.mirror.pkgbuild.com/iso/latest/${iso_file}"
+
+            # HTML permalink
             html_doc="<!DOCTYPE HTML>"
             html_doc+="<meta charset=\"UTF-8\">"
             html_doc+="<meta http-equiv=\"refresh\" content=\"1; url=${direct_url}\">"
             html_doc+="<script>window.location.href=\"${direct_url}\"</script>"
             html_doc+="<title>Download Redirection</title>"
             html_doc+="If you are not redirected automatically, follow the <a href=\"${direct_url}\">link to latest iso</a>"
-            ## php permalink
+
+            # PHP permalink
             php_doc="<?php "
             php_doc+="header('Location: ' . '${direct_url}', true, 303); "
             php_doc+="die(); "
             php_doc+="?>"
-            ## write files
+
+            # Write the permalink files
             if [[ ${extra} == "true" ]]; then
-                echo ${html_doc} > "${iso_dir}/.latest"
-                echo ${php_doc} > "${iso_dir}/.latest.php"
+                echo "${html_doc}" > "${iso_dir}/.latest"
+                echo "${php_doc}" > "${iso_dir}/.latest.php"
             else
-                echo ${html_doc} > "${iso_dir}/.latest-minimal"
-                echo ${php_doc} > "${iso_dir}/.latest-minimal.php"
+                echo "${html_doc}" > "${iso_dir}/.latest-minimal"
+                echo "${php_doc}" > "${iso_dir}/.latest-minimal.php"
             fi
         fi
     fi
 }
+
+
+
+# gen_permalink(){
+#     if [[ ${edition} == "community" ]] || [[ ${edition} == "arch" ]]; then
+#         if [[ -f "${iso_dir}/${iso_file}" ]]; then
+#             msg2 "Creating download link ..."
+#             direct_url="https://osdn.net/dl/${edition}/${iso_file}"
+#
+#             [[ ${edition} == "community" ]] && direct_url="https://osdn.net/dl/persian-${edition}/${iso_file}"
+#
+#             ## html permalink
+#             html_doc="<!DOCTYPE HTML>"
+#             html_doc+="<meta charset=\"UTF-8\">"
+#             html_doc+="<meta http-equiv=\"refresh\" content=\"1; url=${direct_url}\">"
+#             html_doc+="<script>window.location.href=\"${direct_url}\"</script>"
+#             html_doc+="<title>Download Redirection</title>"
+#             html_doc+="If you are not redirected automatically, follow the <a href=\"${direct_url}\">link to latest iso</a>"
+#             ## php permalink
+#             php_doc="<?php "
+#             php_doc+="header('Location: ' . '${direct_url}', true, 303); "
+#             php_doc+="die(); "
+#             php_doc+="?>"
+#             ## write files
+#             if [[ ${extra} == "true" ]]; then
+#                 echo ${html_doc} > "${iso_dir}/.latest"
+#                 echo ${php_doc} > "${iso_dir}/.latest.php"
+#             else
+#                 echo ${html_doc} > "${iso_dir}/.latest-minimal"
+#                 echo ${php_doc} > "${iso_dir}/.latest-minimal.php"
+#             fi
+#         fi
+#     fi
+# }
 
 gen_iso_fn(){
     local vars=() name
@@ -280,7 +320,7 @@ gen_iso_fn(){
 
 reset_pac_conf(){
     info "Restoring [%s/etc/pacman.conf] ..." "$1"
-    sed -e 's|^.*HoldPkg.*|HoldPkg      = pacman glibc manjaro-system|' \
+    sed -e 's|^.*HoldPkg.*|HoldPkg      = pacman glibc arch-system|' \
         -e "s|^.*#CheckSpace|CheckSpace|" \
         -i "$1/etc/pacman.conf"
 }
@@ -360,10 +400,10 @@ make_image_desktop() {
         cp "${path}/desktopfs-pkgs.txt" ${iso_dir}/$(gen_iso_fn)-pkgs.txt
         [[ -e ${profile_dir}/desktop-overlay ]] && copy_overlay "${profile_dir}/desktop-overlay" "${path}"
 
-        if [[ -e "${path}/usr/share/calamares/branding/manjaro/calamares-sidebar.qml" ]]; then
+        if [[ -e "${path}/usr/share/calamares/branding/archlinux/calamares-sidebar.qml" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
-        elif [[ -e "${path}/usr/share/calamares/branding/manjaro/show.qml" ]]; then
+        elif [[ -e "${path}/usr/share/calamares/branding/archlinux/show.qml" ]]; then
             configure_branding_old "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi
@@ -412,10 +452,10 @@ make_image_live() {
 	ln -sfv /dev/null "${path}"/etc/systemd/system/hibernate.target
 	ln -sfv /dev/null "${path}"/etc/systemd/system/hybrid-sleep.target
 
-        if [[ -e "${path}/usr/share/calamares/branding/manjaro/calamares-sidebar.qml" ]]; then
+        if [[ -e "${path}/usr/share/calamares/branding/archlinux/calamares-sidebar.qml" ]]; then
             configure_branding "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
-        elif [[ -e "${path}/usr/share/calamares/branding/manjaro/show.qml" ]]; then
+        elif [[ -e "${path}/usr/share/calamares/branding/archlinux/show.qml" ]]; then
             configure_branding_old "${path}"
             msg "Done [Distribution: Release ${dist_release} Codename ${dist_codename}]"
         fi

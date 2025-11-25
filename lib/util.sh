@@ -207,15 +207,15 @@ init_common(){
 
     [[ -z ${target_arch} ]] && target_arch=$(uname -m)
 
-    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/manjaro-tools'
+    [[ -z ${cache_dir} ]] && cache_dir='/var/cache/arch-tools'
 
-    [[ -z ${chroots_dir} ]] && chroots_dir='/var/lib/manjaro-tools'
+    [[ -z ${chroots_dir} ]] && chroots_dir='/var/lib/arch-tools'
 
-    [[ -z ${log_dir} ]] && log_dir='/var/log/manjaro-tools'
+    [[ -z ${log_dir} ]] && log_dir='/var/log/arch-tools'
 
-    [[ -z ${build_mirror} ]] && build_mirror='https://mirror.easyname.at/manjaro'
+    [[ -z ${build_mirror} ]] && build_mirror='https://geo.mirror.pkgbuild.com/'
 
-    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/manjaro-tools'
+    [[ -z ${tmp_dir} ]] && tmp_dir='/tmp/arch-tools'
 }
 
 init_buildtree(){
@@ -225,7 +225,7 @@ init_buildtree(){
 
     [[ -z ${repo_tree[@]} ]] && repo_tree=('core' 'extra' 'community' 'multilib')
 
-    [[ -z ${host_tree} ]] && host_tree='https://github.com/manjaro'
+    [[ -z ${host_tree} ]] && host_tree='https://github.com/p30developer'
 
     [[ -z ${host_tree_abs} ]] && host_tree_abs='https://projects.archlinux.org/git/svntogit'
 }
@@ -415,11 +415,11 @@ load_profile_config(){
 
     [[ -z ${efi_boot_loader} ]] && efi_boot_loader="grub"
 
-    [[ -z ${hostname} ]] && hostname="manjaro"
+    [[ -z ${hostname} ]] && hostname="archlinux"
 
-    [[ -z ${username} ]] && username="manjaro"
+    [[ -z ${username} ]] && username="archlinux"
 
-    [[ -z ${password} ]] && password="manjaro"
+    [[ -z ${password} ]] && password="archlinux"
 
     [[ -z ${user_shell} ]] && user_shell='/bin/bash'
 
@@ -436,7 +436,7 @@ load_profile_config(){
     [[ -z ${disable_systemd[@]} ]] && disable_systemd=('pacman-init')
 
     if [[ -z ${enable_systemd_live[@]} ]]; then
-        enable_systemd_live=('manjaro-live' 'mhwd-live' 'pacman-init' 'mirrors-live')
+        enable_systemd_live=('arch-live' 'mhwd-live' 'pacman-init' 'mirrors-live')
     fi
 
     if [[ ${displaymanager} != "none" ]]; then
@@ -455,6 +455,8 @@ load_profile_config(){
 
     [[ -z ${chrootcfg} ]] && chrootcfg='false'
 
+    ###
+    #badan bayad dorost shavad
     netgroups="https://gitlab.manjaro.org/applications/calamares-netgroups/-/raw/master/"
 
     [[ -z ${geoip} ]] && geoip='true'
@@ -479,17 +481,24 @@ get_edition(){
     echo ${path##*/}
 }
 
+# get_project(){
+#     case "${edition}" in
+#         'manjaro')
+#             project="manjaro"
+#         ;;
+#         'community')
+#             project="manjaro-community"
+#         ;;
+#     esac
+#     echo "${project}"
+# }
+
 get_project(){
-    case "${edition}" in
-        'manjaro')
-            project="manjaro"
-        ;;
-        'community')
-            project="manjaro-community"
-        ;;
-    esac
+    # Arch Linux فقط یک پروژه رسمی دارد
+    local project="arch"
     echo "${project}"
 }
+
 
 reset_profile(){
     unset displaymanager
@@ -559,132 +568,176 @@ check_profile(){
 }
 
 # $1: file name
+# load_pkgs(){
+#     info "Loading Packages: [%s] ..." "${1##*/}"
+#
+#     local _multi _nonfree_default _nonfree_multi _arch _arch_rm _nonfree_i686 _nonfree_x86_64 _basic _basic_rm _extra _extra_rm
+#
+#     if ${basic}; then
+#         _basic="s|>basic||g"
+#     else
+#         _basic_rm="s|>basic.*||g"
+#     fi
+#
+#     if ${extra}; then
+#         _extra="s|>extra||g"
+#     else
+#         _extra_rm="s|>extra.*||g"
+#     fi
+#
+#     case "${target_arch}" in
+#         "i686")
+#             _arch="s|>i686||g"
+#             _arch_rm="s|>x86_64.*||g"
+#             _multi="s|>multilib.*||g"
+#             _nonfree_multi="s|>nonfree_multilib.*||g"
+#             _nonfree_x86_64="s|>nonfree_x86_64.*||g"
+#             if ${nonfree_mhwd}; then
+#                 _nonfree_default="s|>nonfree_default||g"
+#                 _nonfree_i686="s|>nonfree_i686||g"
+#
+#             else
+#                 _nonfree_default="s|>nonfree_default.*||g"
+#                 _nonfree_i686="s|>nonfree_i686.*||g"
+#             fi
+#         ;;
+#         *)
+#             _arch="s|>x86_64||g"
+#             _arch_rm="s|>i686.*||g"
+#             _nonfree_i686="s|>nonfree_i686.*||g"
+#             if ${multilib}; then
+#                 _multi="s|>multilib||g"
+#                 if ${nonfree_mhwd}; then
+#                     _nonfree_default="s|>nonfree_default||g"
+#                     _nonfree_x86_64="s|>nonfree_x86_64||g"
+#                     _nonfree_multi="s|>nonfree_multilib||g"
+#                 else
+#                     _nonfree_default="s|>nonfree_default.*||g"
+#                     _nonfree_multi="s|>nonfree_multilib.*||g"
+#                     _nonfree_x86_64="s|>nonfree_x86_64.*||g"
+#                 fi
+#             else
+#                 _multi="s|>multilib.*||g"
+#                 if ${nonfree_mhwd}; then
+#                     _nonfree_default="s|>nonfree_default||g"
+#                     _nonfree_x86_64="s|>nonfree_x86_64||g"
+#                     _nonfree_multi="s|>nonfree_multilib.*||g"
+#                 else
+#                     _nonfree_default="s|>nonfree_default.*||g"
+#                     _nonfree_x86_64="s|>nonfree_x86_64.*||g"
+#                     _nonfree_multi="s|>nonfree_multilib.*||g"
+#                 fi
+#             fi
+#         ;;
+#     esac
+#
+# # We can reuse this code
+#     local _edition _edition_rm
+#     case "${edition}" in
+#         'sonar')
+#             _edition="s|>sonar||g"
+#             _edition_rm="s|>manjaro2.*||g"
+#         ;;
+#         *)
+#             _edition="s|>manjaro2||g"
+#             _edition_rm="s|>sonar.*||g"
+#         ;;
+#     esac
+#
+#     local _office _office_rm
+#     if ${office_installer}; then
+#         _office="s|>office||g"
+#     else
+#         _office_rm="s|>office.*||g"
+#     fi
+#
+#     local _blacklist="s|>blacklist.*||g" \
+#         _kernel="s|KERNEL|$kernel|g" \
+#         _used_kernel=${kernel:5:2} \
+#         _space="s| ||g" \
+#         _clean=':a;N;$!ba;s/\n/ /g' \
+#         _com_rm="s|#.*||g" \
+#         _purge="s|>cleanup.*||g" \
+#         _purge_rm="s|>cleanup||g"
+#
+#     packages=$(sed "$_com_rm" "$1" \
+#             | sed "$_space" \
+#             | sed "$_blacklist" \
+#             | sed "$_purge" \
+#             | sed "$_arch" \
+#             | sed "$_arch_rm" \
+#             | sed "$_nonfree_default" \
+#             | sed "$_multi" \
+#             | sed "$_nonfree_i686" \
+#             | sed "$_nonfree_x86_64" \
+#             | sed "$_nonfree_multi" \
+#             | sed "$_kernel" \
+#             | sed "$_edition" \
+#             | sed "$_edition_rm" \
+#             | sed "$_basic" \
+#             | sed "$_basic_rm" \
+#             | sed "$_extra" \
+#             | sed "$_extra_rm" \
+#             | sed "$_office" \
+#             | sed "$_office_rm" \
+#             | sed "$_clean")
+#
+#     if [[ $1 == "${packages_mhwd}" ]]; then
+#
+#         [[ ${_used_kernel} < "42" ]] && local _amd="s|xf86-video-amdgpu||g"
+#
+#         packages_cleanup=$(sed "$_com_rm" "$1" \
+#             | grep cleanup \
+#             | sed "$_purge_rm" \
+#             | sed "$_kernel" \
+#             | sed "$_clean" \
+#             | sed "$_amd")
+#     fi
+# }
+
 load_pkgs(){
     info "Loading Packages: [%s] ..." "${1##*/}"
 
-    local _multi _nonfree_default _nonfree_multi _arch _arch_rm _nonfree_i686 _nonfree_x86_64 _basic _basic_rm _extra _extra_rm
+    local _clean _com_rm _kernel _space _multilib _nonfree
 
-    if ${basic}; then
-        _basic="s|>basic||g"
+    # پایه‌ای
+    _kernel="s|KERNEL|$kernel|g"
+    _space="s| ||g"
+    _clean=':a;N;$!ba;s/\n/ /g'
+    _com_rm="s|#.*||g"
+
+    # Multilib
+    if ${multilib}; then
+        _multilib="s|>multilib||g"
     else
-        _basic_rm="s|>basic.*||g"
+        _multilib="s|>multilib.*||g"
     fi
 
-    if ${extra}; then
-        _extra="s|>extra||g"
+    # Nonfree packages
+    if ${nonfree}; then
+        _nonfree="s|>nonfree||g"
     else
-        _extra_rm="s|>extra.*||g"
+        _nonfree="s|>nonfree.*||g"
     fi
 
-    case "${target_arch}" in
-        "i686")
-            _arch="s|>i686||g"
-            _arch_rm="s|>x86_64.*||g"
-            _multi="s|>multilib.*||g"
-            _nonfree_multi="s|>nonfree_multilib.*||g"
-            _nonfree_x86_64="s|>nonfree_x86_64.*||g"
-            if ${nonfree_mhwd}; then
-                _nonfree_default="s|>nonfree_default||g"
-                _nonfree_i686="s|>nonfree_i686||g"
-
-            else
-                _nonfree_default="s|>nonfree_default.*||g"
-                _nonfree_i686="s|>nonfree_i686.*||g"
-            fi
-        ;;
-        *)
-            _arch="s|>x86_64||g"
-            _arch_rm="s|>i686.*||g"
-            _nonfree_i686="s|>nonfree_i686.*||g"
-            if ${multilib}; then
-                _multi="s|>multilib||g"
-                if ${nonfree_mhwd}; then
-                    _nonfree_default="s|>nonfree_default||g"
-                    _nonfree_x86_64="s|>nonfree_x86_64||g"
-                    _nonfree_multi="s|>nonfree_multilib||g"
-                else
-                    _nonfree_default="s|>nonfree_default.*||g"
-                    _nonfree_multi="s|>nonfree_multilib.*||g"
-                    _nonfree_x86_64="s|>nonfree_x86_64.*||g"
-                fi
-            else
-                _multi="s|>multilib.*||g"
-                if ${nonfree_mhwd}; then
-                    _nonfree_default="s|>nonfree_default||g"
-                    _nonfree_x86_64="s|>nonfree_x86_64||g"
-                    _nonfree_multi="s|>nonfree_multilib.*||g"
-                else
-                    _nonfree_default="s|>nonfree_default.*||g"
-                    _nonfree_x86_64="s|>nonfree_x86_64.*||g"
-                    _nonfree_multi="s|>nonfree_multilib.*||g"
-                fi
-            fi
-        ;;
-    esac
-
-# We can reuse this code
-    local _edition _edition_rm
-    case "${edition}" in
-        'sonar')
-            _edition="s|>sonar||g"
-            _edition_rm="s|>manjaro.*||g"
-        ;;
-        *)
-            _edition="s|>manjaro||g"
-            _edition_rm="s|>sonar.*||g"
-        ;;
-    esac
-
-    local _office _office_rm
-    if ${office_installer}; then
-        _office="s|>office||g"
-    else
-        _office_rm="s|>office.*||g"
-    fi
-
-    local _blacklist="s|>blacklist.*||g" \
-        _kernel="s|KERNEL|$kernel|g" \
-        _used_kernel=${kernel:5:2} \
-        _space="s| ||g" \
-        _clean=':a;N;$!ba;s/\n/ /g' \
-        _com_rm="s|#.*||g" \
-        _purge="s|>cleanup.*||g" \
-        _purge_rm="s|>cleanup||g"
-
+    # پردازش فایل پکیج‌ها
     packages=$(sed "$_com_rm" "$1" \
-            | sed "$_space" \
-            | sed "$_blacklist" \
-            | sed "$_purge" \
-            | sed "$_arch" \
-            | sed "$_arch_rm" \
-            | sed "$_nonfree_default" \
-            | sed "$_multi" \
-            | sed "$_nonfree_i686" \
-            | sed "$_nonfree_x86_64" \
-            | sed "$_nonfree_multi" \
-            | sed "$_kernel" \
-            | sed "$_edition" \
-            | sed "$_edition_rm" \
-            | sed "$_basic" \
-            | sed "$_basic_rm" \
-            | sed "$_extra" \
-            | sed "$_extra_rm" \
-            | sed "$_office" \
-            | sed "$_office_rm" \
-            | sed "$_clean")
+                | sed "$_space" \
+                | sed "$_clean" \
+                | sed "$_kernel" \
+                | sed "$_multilib" \
+                | sed "$_nonfree")
 
+    # cleanup اگر لازم باشد (مثل پکیج‌های mhwd)
     if [[ $1 == "${packages_mhwd}" ]]; then
-
-        [[ ${_used_kernel} < "42" ]] && local _amd="s|xf86-video-amdgpu||g"
-
         packages_cleanup=$(sed "$_com_rm" "$1" \
             | grep cleanup \
-            | sed "$_purge_rm" \
             | sed "$_kernel" \
-            | sed "$_clean" \
-            | sed "$_amd")
+            | sed "$_clean")
     fi
 }
+
+
 
 user_own(){
     local flag=$2
@@ -718,7 +771,7 @@ load_user_info(){
         USER_HOME=$HOME
     fi
 
-    USERCONFDIR="$USER_HOME/.config/manjaro-tools"
+    USERCONFDIR="$USER_HOME/.config/arch-tools"
     prepare_dir "${USERCONFDIR}"
 }
 
@@ -729,13 +782,13 @@ load_run_dir(){
 }
 
 show_version(){
-    msg "manjaro-tools"
+    msg "arch-tools"
     msg2 "version: %s" "${version}"
 }
 
 show_config(){
-    if [[ -f ${USERCONFDIR}/manjaro-tools.conf ]]; then
-        msg2 "config: %s" "~/.config/manjaro-tools/manjaro-tools.conf"
+    if [[ -f ${USERCONFDIR}/arch-tools.conf ]]; then
+        msg2 "config: %s" "~/.config/arch-tools/arch-tools.conf"
     else
         msg2 "config: %s" "${manjaro_tools_conf}"
     fi
@@ -835,14 +888,16 @@ create_chksums() {
 }
 
 init_profiles() {
-    _workdir='/usr/share/manjaro-tools'
+    _workdir='/usr/share/arch-tools'
     if [[ -d ${_workdir}/iso-profiles ]]; then
         rm -Rf ${_workdir}/iso-profiles
     fi
-    git clone -q --depth 1 -b ${branch} https://gitlab.manjaro.org/profiles-and-settings/iso-profiles.git ${_workdir}/iso-profiles/
+
+
+   git clone -q --depth 1 -b ${branch} https://github.com/p30developer/iso-profiles.git ${_workdir}/iso-profiles/
 
     #Check if git clone is done
-    if [[ -d ${_workdir}/iso-profiles/manjaro ]] && [[ -d ${_workdir}/iso-profiles/community ]]; then
+    if [[ -d ${_workdir}/iso-profiles/arch ]] && [[ -d ${_workdir}/iso-profiles/community ]]; then
 
         for i in ${_workdir}/iso-profiles/.gitignore ${_workdir}/iso-profiles/README.md; do
         rm -f $i
@@ -851,7 +906,7 @@ init_profiles() {
         for i in ${_workdir}/iso-profiles/.git ${_workdir}/iso-profiles/sonar; do
             rm -Rf $i
         done
-    else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://gitlab.manjaro.org/profiles-and-settings/iso-profiles'"
+    else msg2 "Impossible to initialize iso-profiles, please check internet connection or browse at 'https://github.com/p30developer/iso-profiles.git'"
     exit 1
     fi
 }
